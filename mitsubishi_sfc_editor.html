@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三菱 PLC 順控功能表 (SFC) 編輯器</title>
+  <style>
+    :root {
+      --bg-main: #1e1e24;
+      --bg-panel: #25252d;
+      --bg-canvas: #16161a;
+      --bg-card: #2c2c36;
+      --border-color: #3b3b48;
+      --border-focus: #3b82f6;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --active-step: #10b981;
+      --active-step-glow: rgba(16, 185, 129, 0.45);
+      --tran-color: #f59e0b;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+      --run-green: #22c55e;
+      --stop-red: #ef4444;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", "Heiti TC", sans-serif;
+      --mono-family: "Consolas", "Courier New", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* 頂部標題與主控制列 */
+    header {
+      height: 48px;
+      background: #18181f;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: 0.5px;
+    }
+
+    .brand-badge {
+      background: #dc2626;
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 3px;
+      letter-spacing: 1px;
+    }
+
+    .plc-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: #111116;
+      padding: 4px 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border-color);
+      font-size: 12px;
+      font-family: var(--mono-family);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .led {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #4b5563;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+
+    .led.led-green.active {
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .led.led-red.active {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+    }
+
+    .led.led-amber.active {
+      background: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+    }
+
+    .btn-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button {
+      font-family: inherit;
+      cursor: pointer;
+      border: none;
+      outline: none;
+      transition: all 0.15s ease;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-main);
+      background: #33333f;
+      border: 1px solid var(--border-color);
+    }
+
+    .btn:hover {
+      background: #3e3e4d;
+      border-color: #555568;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: #3b82f6;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-success {
+      background: #15803d;
+      border-color: #22c55e;
+    }
+    .btn-success:hover {
+      background: #166534;
+    }
+
+    .btn-danger {
+      background: #991b1b;
+      border-color: #ef4444;
+    }
+    .btn-danger:hover {
+      background: #7f1d1d;
+    }
+
+    .btn-icon {
+      padding: 6px;
+      border-radius: 4px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+    }
+
+    .btn-icon:hover {
+      background: #33333f;
+      color: var(--text-main);
+      border-color: var(--border-color);
+    }
+
+    .btn-icon.active {
+      background: #2563eb;
+      color: #fff;
+      border-color: #3b82f6;
+    }
+
+    /* 次級工具列 (SFC圖元選擇、縮放、預設專案) */
+    .sub-toolbar {
+      height: 40px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .tool-section {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tool-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border-color);
+      margin: 0 6px;
+    }
+
+    .select-input {
+      background: #1b1b22;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      outline: none;
+    }
+
+    /* 主體佈局：左目錄 + 中畫布 + 右側屬性/梯形圖 */
+    .workspace {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* 左側邊欄：軟元件與元件庫 */
+    .sidebar-left {
+      width: 220px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .panel-header {
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #202027;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .component-card {
+      background: #1b1b22;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      transition: all 0.15s ease;
+    }
+
+    .component-card:hover {
+      border-color: var(--primary);
+      background: #282834;
+      transform: translateY(-1px);
+    }
+
+    .component-card:active {
+      cursor: grabbing;
+    }
+
+    .elem-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111116;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      font-weight: bold;
+      font-size: 11px;
+      font-family: var(--mono-family);
+      color: #60a5fa;
+      flex-shrink: 0;
+    }
+
+    .elem-icon.init-step {
+      border: 2px double #3b82f6;
+      color: #3b82f6;
+    }
+
+    .elem-icon.tran {
+      color: #f59e0b;
+    }
+
+    /* 中間 SFC 編輯畫布 */
+    .canvas-container {
+      flex: 1;
+      background-color: var(--bg-canvas);
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 24px 24px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .canvas-container.connecting {
+      cursor: crosshair;
+    }
+
+    #sfc-svg-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #sfc-nodes-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      transform-origin: 0 0;
+    }
+
+    /* SFC 圖元節點樣式 */
+    .sfc-node {
+      position: absolute;
+      cursor: move;
+      transition: box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .sfc-step {
+      width: 110px;
+      height: 52px;
+      background: #1f2029;
+      border: 2px solid #4f46e5;
+      border-radius: 2px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--mono-family);
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    .sfc-step.init {
+      outline: 2px solid #4f46e5;
+      outline-offset: 3px;
+    }
+
+    .sfc-step .step-id {
+      font-size: 14px;
+      font-weight: bold;
+      color: #e0e7ff;
+    }
+
+    .sfc-step .step-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      max-width: 95px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: center;
+      font-family: var(--font-family);
+    }
+
+    /* 運行時高亮狀態 */
+    .sfc-step.active {
+      border-color: var(--active-step) !important;
+      background: #064e3b !important;
+      box-shadow: 0 0 16px var(--active-step-glow) !important;
+    }
+    .sfc-step.init.active {
+      outline-color: var(--active-step) !important;
+    }
+    .sfc-step.active .step-id {
+      color: #a7f3d0 !important;
+    }
+
+    .sfc-node.selected .sfc-step {
+      border-color: #60a5fa !important;
+      box-shadow: 0 0 10px rgba(96, 165, 250, 0.7);
+    }
+
+    /* 動作塊 (掛載在 Step 右側) */
+    .sfc-action-box {
+      position: absolute;
+      left: 118px;
+      top: 0;
+      min-width: 130px;
+      height: 52px;
+      background: #23232e;
+      border: 1px solid #475569;
+      border-left: 3px solid #3b82f6;
+      border-radius: 2px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4px 8px;
+      font-family: var(--mono-family);
+      font-size: 11px;
+      pointer-events: auto;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.25);
+    }
+
+    .sfc-action-box .action-qualifier {
+      color: #fbbf24;
+      font-weight: bold;
+      font-size: 10px;
+    }
+
+    .sfc-action-box .action-cmd {
+      color: #f3f4f6;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* 轉移條件節點 (Transition) */
+    .sfc-transition {
+      width: 110px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      cursor: move;
+    }
+
+    .sfc-transition .tran-bar {
+      width: 44px;
+      height: 4px;
+      background: #94a3b8;
+      border-radius: 1px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .sfc-transition.active .tran-bar {
+      background: #fbbf24;
+      box-shadow: 0 0 10px #fbbf24;
+    }
+
+    .sfc-transition .tran-label {
+      position: absolute;
+      left: 60px;
+      font-family: var(--mono-family);
+      font-size: 11px;
+      color: #fbbf24;
+      background: #181820;
+      padding: 1px 6px;
+      border-radius: 3px;
+      border: 1px solid #334155;
+      white-space: nowrap;
+    }
+
+    .sfc-transition.selected .tran-bar {
+      background: #60a5fa;
+      box-shadow: 0 0 8px #60a5fa;
+    }
+
+    /* 端口連接點 (Ports) */
+    .port {
+      width: 10px;
+      height: 10px;
+      background: #475569;
+      border: 1px solid #cbd5e1;
+      border-radius: 50%;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: crosshair;
+      z-index: 5;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s;
+    }
+
+    .sfc-node:hover .port {
+      opacity: 1;
+    }
+
+    .port.port-in {
+      top: -6px;
+    }
+
+    .port.port-out {
+      bottom: -6px;
+    }
+
+    .port:hover {
+      background: #3b82f6;
+      transform: translateX(-50%) scale(1.3);
+    }
+
+    /* 右側邊欄：屬性編輯與梯形圖即時轉譯 */
+    .sidebar-right {
+      width: 330px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-color);
+      background: #1e1e24;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px 4px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      color: #60a5fa;
+      border-bottom-color: #60a5fa;
+      background: #25252d;
+    }
+
+    .prop-row {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .prop-row label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .prop-input {
+      background: #181820;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px 8px;
+      color: var(--text-main);
+      font-size: 12px;
+      font-family: var(--mono-family);
+      outline: none;
+    }
+
+    .prop-input:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* 梯形圖預覽區 (仿三菱 GX Works2 梯形圖風格) */
+    .ladder-preview {
+      background: #0d1117;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 10px;
+      min-height: 140px;
+      font-family: var(--mono-family);
+      position: relative;
+    }
+
+    .ladder-rung {
+      position: relative;
+      height: 60px;
+      margin: 10px 0;
+    }
+
+    /* 底部工控模擬器控制台 */
+    .bottom-console {
+      height: 180px;
+      background: #15151b;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .console-header {
+      height: 32px;
+      background: #1b1b22;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .console-content {
+      flex: 1;
+      display: flex;
+      padding: 8px 12px;
+      gap: 16px;
+      overflow-x: auto;
+    }
+
+    .io-panel {
+      flex: 1;
+      background: #1c1c24;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .io-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .io-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .io-btn {
+      background: #262633;
+      border: 1px solid #3b3b4d;
+      border-radius: 3px;
+      padding: 5px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .io-btn:hover {
+      background: #333346;
+    }
+
+    .io-btn.on {
+      background: #065f46;
+      border-color: #10b981;
+    }
+
+    .io-btn .io-label {
+      font-size: 10px;
+      font-family: var(--mono-family);
+      font-weight: bold;
+      color: #cbd5e1;
+    }
+
+    .io-btn .io-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #475569;
+    }
+
+    .io-btn.on .io-led {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+
+    .output-item {
+      cursor: default;
+    }
+
+    .output-item.on {
+      background: #1e3a8a;
+      border-color: #3b82f6;
+    }
+
+    .output-item.on .io-led {
+      background: #60a5fa;
+      box-shadow: 0 0 6px #60a5fa;
+    }
+
+    .sys-log {
+      flex: 1.2;
+      background: #0f0f13;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-family: var(--mono-family);
+      font-size: 11px;
+      overflow-y: auto;
+      color: #10b981;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .log-entry {
+      line-height: 1.4;
+    }
+    .log-time {
+      color: #6b7280;
+    }
+
+    /* 彈出視窗 / 遮罩 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-box {
+      width: 580px;
+      background: #25252d;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 16px;
+      max-height: 65vh;
+      overflow-y: auto;
+    }
+
+    .modal-footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      background: #1e1e24;
+    }
+
+    /* 快捷連線指示 */
+    .connecting-tip {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(30, 41, 59, 0.9);
+      border: 1px solid #3b82f6;
+      color: #93c5fd;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
+      z-index: 20;
+    }
+
+    /* 箭頭與連線 SVG 樣式 */
+    .sfc-line {
+      stroke: #64748b;
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .sfc-line.active {
+      stroke: #10b981;
+      stroke-width: 2.5;
+      filter: drop-shadow(0 0 3px #10b981);
+    }
+
+    .sfc-line.temp {
+      stroke: #3b82f6;
+      stroke-width: 2;
+      stroke-dasharray: 4;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部標題與主控制列 -->
+  <header>
+    <div class="brand">
+      <span class="brand-badge">FX3U/5U</span>
+      <span>三菱 PLC 順控功能表 (SFC) 編輯器</span>
+    </div>
+
+    <!-- PLC 仿真核心狀態 -->
+    <div class="plc-status-bar">
+      <div class="status-indicator">
+        <div class="led led-green" id="led-run"></div>
+        <span>RUN</span>
+      </div>
+      <div class="status-indicator">
+        <div class="led led-red active" id="led-stop"></div>
+        <span>STOP</span>
+      </div>
+      <div class="status-indicator">
+        <div class="led led-amber" id="led-err"></div>
+        <span>ERROR</span>
+      </div>
+      <span style="color:#6b7280">|</span>
+      <span>掃描週期: <b id="scan-time">1.2ms</b></span>
+      <span>當前步: <b id="current-step-display" style="color:#34d399">S0</b></span>
+    </div>
+
+    <!-- 運行與模式控制 -->
+    <div class="btn-group">
+      <button class="btn btn-success" id="btn-run" title="啟動 PLC 循序掃描">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <span>運行 (RUN)</span>
+      </button>
+      <button class="btn btn-danger" id="btn-stop" title="停止 PLC 掃描">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12"/></svg>
+        <span>停止 (STOP)</span>
+      </button>
+      <button class="btn" id="btn-step" title="單步推動（僅執行一次轉移）">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/><path d="M5 12h10"/></svg>
+        <span>單步</span>
+      </button>
+      <button class="btn" id="btn-reset" title="複位至初始步 S0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        <span>復位</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 次級快捷工具列 -->
+  <div class="sub-toolbar">
+    <div class="tool-section">
+      <span style="font-size:12px; color:var(--text-muted); margin-right:4px;">典型工程範例:</span>
+      <select class="select-input" id="template-select" title="選擇預設 SFC 工藝範本">
+        <option value="press">氣缸沖壓與鑽孔循序加工</option>
+        <option value="traffic">十字路口三色交通號誌</option>
+        <option value="conveyor">雙工位分選流水線</option>
+      </select>
+      <button class="btn" id="btn-load-template" title="載入範本">載入</button>
+    </div>
+
+    <div class="tool-divider"></div>
+
+    <div class="tool-section">
+      <button class="btn btn-icon active" id="tool-select" title="選取與拖曳模式">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 3 7 18 3-7 7-3L3 3z"/></svg>
+      </button>
+      <button class="btn btn-icon" id="tool-connect" title="連線模式 (點擊來源端口連接到目標)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </button>
+      <button class="btn btn-icon" id="tool-delete" title="刪除選中節點或連線">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+
+    <div class="tool-divider"></div>
+
+    <div class="tool-section">
+      <button class="btn" id="btn-export-il" title="檢視生成的三菱步進指令表 (STL/RET)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <span>導出 STL 指令表</span>
+      </button>
+      <button class="btn" id="btn-clear-canvas" title="清空畫布">清空</button>
+    </div>
+  </div>
+
+  <!-- 主體編輯工作區 -->
+  <div class="workspace">
+    <!-- 左側工具庫 (可拖曳或點擊新增 SFC 元件) -->
+    <div class="sidebar-left">
+      <div class="panel-header">
+        <span>SFC 圖元庫</span>
+      </div>
+      <div class="panel-body">
+        <div class="component-card" id="add-init-step" title="點擊或拖放新增初始步">
+          <div class="elem-icon init-step">S0</div>
+          <div>
+            <div style="font-weight:600">初始步 (Initial Step)</div>
+            <div style="color:var(--text-muted); font-size:10px;">雙線框，上電預設激活</div>
+          </div>
+        </div>
+
+        <div class="component-card" id="add-step" title="點擊新增一般步">
+          <div class="elem-icon">S20</div>
+          <div>
+            <div style="font-weight:600">一般步 (Step)</div>
+            <div style="color:var(--text-muted); font-size:10px;">工藝步驟與輸出動作</div>
+          </div>
+        </div>
+
+        <div class="component-card" id="add-tran" title="點擊新增轉移條件">
+          <div class="elem-icon tran">━</div>
+          <div>
+            <div style="font-weight:600">轉移條件 (Transition)</div>
+            <div style="color:var(--text-muted); font-size:10px;">短橫槓，輸入條件成立時觸發</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+          <div class="panel-header" style="background:transparent; padding:0 0 8px 0;">
+            <span>常用軟元件速查</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); line-height:1.6; font-family:var(--mono-family);">
+            <div><b style="color:#60a5fa">S</b>: 步進狀態 (S0~S999)</div>
+            <div><b style="color:#34d399">X</b>: 實體輸入 (X0~X7)</div>
+            <div><b style="color:#f472b6">Y</b>: 實體輸出 (Y0~Y7)</div>
+            <div><b style="color:#fbbf24">T</b>: 計時器 (T0~T3)</div>
+            <div><b style="color:#a78bfa">M</b>: 輔助繼電器 (M0~M100)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中間 SFC 流程圖畫布 -->
+    <div class="canvas-container" id="canvas-container">
+      <svg id="sfc-svg-layer">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 8 5 L 0 9 z" fill="#64748b" />
+          </marker>
+          <marker id="arrow-active" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 1 L 8 5 L 0 9 z" fill="#10b981" />
+          </marker>
+        </defs>
+      </svg>
+      <div id="sfc-nodes-layer"></div>
+
+      <!-- 連線模式懸浮引導提示 -->
+      <div class="connecting-tip" id="conn-tip">
+        連線模式中：請點擊起始節點下方的輸出端口，再點擊目標節點上方的輸入端口
+      </div>
+    </div>
+
+    <!-- 右側側邊欄：屬性與梯形圖即時轉譯 -->
+    <div class="sidebar-right">
+      <div class="tabs">
+        <button class="tab-btn active" id="tab-prop">元件屬性</button>
+        <button class="tab-btn" id="tab-ladder">梯形圖 (Ladder)</button>
+      </div>
+
+      <!-- 屬性編輯頁籤 -->
+      <div class="panel-body" id="pane-prop">
+        <div id="no-selection-hint" style="color:var(--text-muted); font-size:12px; text-align:center; margin-top:40px;">
+          請在左側畫布點選步 (Step) 或轉移條件 (Transition) 以編輯參數
+        </div>
+
+        <div id="selection-form" style="display:none;">
+          <div class="prop-row">
+            <label>元件類型</label>
+            <input type="text" class="prop-input" id="prop-type" readonly style="background:#131317; color:#94a3b8;">
+          </div>
+
+          <div class="prop-row">
+            <label>軟元件編號 (ID / 標識)</label>
+            <input type="text" class="prop-input" id="prop-id" placeholder="例如 S0, S20 或 TR1">
+          </div>
+
+          <div class="prop-row">
+            <label>註釋 / 描述文案</label>
+            <input type="text" class="prop-input" id="prop-desc" placeholder="例如 初始等待 / 氣缸夾緊">
+          </div>
+
+          <!-- 步專屬：動作清單 (Action List) -->
+          <div id="step-actions-container">
+            <div style="font-size:11px; font-weight:600; color:var(--text-muted); margin: 12px 0 6px 0; display:flex; justify-content:space-between; align-items:center;">
+              <span>動作輸出 (Action Command)</span>
+            </div>
+            <div class="prop-row">
+              <label>控制指令 (三菱 STL 語法)</label>
+              <input type="text" class="prop-input" id="prop-action-cmd" placeholder="例: OUT Y0 或 OUT T0 K30">
+            </div>
+            <div class="prop-row">
+              <label>限定符 (Qualifier)</label>
+              <select class="select-input" id="prop-action-qualifier" style="width:100%;">
+                <option value="N">N (非儲存型 / 步激活時接通)</option>
+                <option value="S">S (置位型 / SET)</option>
+                <option value="R">R (複位型 / RST)</option>
+                <option value="L">L (時間延遲限制)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 轉移專屬：轉移邏輯條件 (Transition Condition) -->
+          <div id="tran-condition-container" style="display:none;">
+            <div class="prop-row">
+              <label>轉移條件運算式 (Contacts)</label>
+              <input type="text" class="prop-input" id="prop-condition-expr" placeholder="例: X0 或 X1 AND M0 或 T0">
+              <span style="font-size:10px; color:#9ca3af; margin-top:2px;">支持 X, Y, M, T 等接點邏輯組合</span>
+            </div>
+          </div>
+
+          <div style="margin-top:16px;">
+            <button class="btn btn-primary" id="btn-save-props" style="width:100%;">套用變更</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 梯形圖轉譯頁籤 (即時生成三菱梯形圖橫節) -->
+      <div class="panel-body" id="pane-ladder" style="display:none;">
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          當前選中節點對應的三菱步進梯形圖 (Ladder Diagram):
+        </div>
+        <div class="ladder-preview" id="ladder-canvas">
+          <!-- 梯形圖 SVG 渲染動態注入 -->
+        </div>
+        <div style="margin-top:12px; font-size:11px; color:#9ca3af; line-height:1.5;">
+          說明：三菱 FX/Q/iQ-R 系列 PLC 將 SFC 步轉換為 STL 步進觸點指令；轉移條件作為 STL 觸點內的條件邏輯，成立時執行 `SET Sxx` 完成步進轉移。
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部工控模擬器控制台 -->
+  <div class="bottom-console">
+    <div class="console-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-weight:600; color:#f3f4f6;">PLC 軟元件在線狀態監視與模擬激發</span>
+        <span style="color:#64748b;">(點擊 X 輸入開關可模擬外部傳感器訊號)</span>
+      </div>
+      <div>
+        <span style="font-size:11px; color:#9ca3af;">當前活躍步激活數: <span id="active-steps-count" style="color:#34d399; font-weight:bold;">1</span></span>
+      </div>
+    </div>
+
+    <div class="console-content">
+      <!-- 外部輸入訊號 X 模擬開關 (X0 ~ X7) -->
+      <div class="io-panel">
+        <div class="io-title">
+          <span>X 輸入接點 (點擊切換 ON/OFF)</span>
+          <span style="color:#3b82f6;">SENSOR IN</span>
+        </div>
+        <div class="io-grid">
+          <div class="io-btn" data-pin="X0" title="點擊切換 X0">
+            <span class="io-label">X0</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X1" title="點擊切換 X1">
+            <span class="io-label">X1</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X2" title="點擊切換 X2">
+            <span class="io-label">X2</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X3" title="點擊切換 X3">
+            <span class="io-label">X3</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X4" title="點擊切換 X4">
+            <span class="io-label">X4</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X5" title="點擊切換 X5">
+            <span class="io-label">X5</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X6" title="點擊切換 X6">
+            <span class="io-label">X6</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn" data-pin="X7" title="點擊切換 X7">
+            <span class="io-label">X7</span>
+            <div class="io-led"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 外部輸出線圈 Y 監視器 (Y0 ~ Y7) -->
+      <div class="io-panel">
+        <div class="io-title">
+          <span>Y 實體輸出負載 (即時狀態)</span>
+          <span style="color:#ec4899;">ACTUATOR OUT</span>
+        </div>
+        <div class="io-grid">
+          <div class="io-btn output-item" id="y-out-Y0">
+            <span class="io-label">Y0</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y1">
+            <span class="io-label">Y1</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y2">
+            <span class="io-label">Y2</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y3">
+            <span class="io-label">Y3</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y4">
+            <span class="io-label">Y4</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y5">
+            <span class="io-label">Y5</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y6">
+            <span class="io-label">Y6</span>
+            <div class="io-led"></div>
+          </div>
+          <div class="io-btn output-item" id="y-out-Y7">
+            <span class="io-label">Y7</span>
+            <div class="io-led"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 計時器與輔助繼電器監視 -->
+      <div class="io-panel" style="flex:0.8;">
+        <div class="io-title">
+          <span>內部計時器 T</span>
+          <span style="color:#fbbf24;">TIMER</span>
+        </div>
+        <div style="font-size:11px; font-family:var(--mono-family); display:flex; flex-direction:column; gap:4px; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>T0 (沖壓定時):</span>
+            <span id="timer-val-T0" style="color:#fbbf24; font-weight:bold;">0.0s / 3.0s</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>T1 (冷卻定時):</span>
+            <span id="timer-val-T1" style="color:#fbbf24; font-weight:bold;">0.0s / 2.0s</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span>M0 (自動準備):</span>
+            <span id="relay-val-M0" style="color:#94a3b8; font-weight:bold;">OFF</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 系統運行診斷日誌 -->
+      <div class="sys-log" id="sys-log">
+        <div class="log-entry"><span class="log-time">[00:00:00]</span> 三菱 PLC SFC 編輯環境就緒。</div>
+        <div class="log-entry"><span class="log-time">[00:00:00]</span> 初始步 S0 已激活，等待啟動訊號 (X0)。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 指令表 (STL / IL) 導出模態視窗 -->
+  <div class="modal-overlay" id="modal-il">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span>三菱 FX / Q 系列 STL 指令表輸出</span>
+        <button class="btn-icon" id="btn-close-modal" style="font-size:18px;">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="il-output-code" readonly style="width:100%; height:260px; background:#121217; color:#34d399; font-family:var(--mono-family); font-size:12px; padding:10px; border:1px solid var(--border-color); border-radius:4px; resize:none;"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="btn-copy-il">複製到剪貼簿</button>
+        <button class="btn" id="btn-close-il">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 三菱 PLC SFC 編輯與仿真引擎
+     */
+    (function () {
+      // 1. 核心資料模型
+      const state = {
+        mode: 'select', // 'select' | 'connect'
+        connectStartNodeId: null,
+        selectedNodeId: null,
+        nodes: [],
+        connections: [],
+        plc: {
+          running: false,
+          scanInterval: null,
+          scanCount: 0,
+          activeStepIds: new Set(['S0']),
+          inputs: { X0: false, X1: false, X2: false, X3: false, X4: false, X5: false, X6: false, X7: false },
+          outputs: { Y0: false, Y1: false, Y2: false, Y3: false, Y4: false, Y5: false, Y6: false, Y7: false },
+          timers: {
+            T0: { current: 0, target: 30, enabled: false, done: false }, // 3.0s (30 * 100ms)
+            T1: { current: 0, target: 20, enabled: false, done: false }  // 2.0s
+          },
+          memory: { M0: true }
+        }
+      };
+
+      // DOM 節點快取
+      const dom = {
+        container: document.getElementById('canvas-container'),
+        nodesLayer: document.getElementById('sfc-nodes-layer'),
+        svgLayer: document.getElementById('sfc-svg-layer'),
+        connTip: document.getElementById('conn-tip'),
+        // 工具按鈕
+        toolSelect: document.getElementById('tool-select'),
+        toolConnect: document.getElementById('tool-connect'),
+        toolDelete: document.getElementById('tool-delete'),
+        // 運行控制
+        btnRun: document.getElementById('btn-run'),
+        btnStop: document.getElementById('btn-stop'),
+        btnStep: document.getElementById('btn-step'),
+        btnReset: document.getElementById('btn-reset'),
+        ledRun: document.getElementById('led-run'),
+        ledStop: document.getElementById('led-stop'),
+        currentStepDisplay: document.getElementById('current-step-display'),
+        activeCountDisplay: document.getElementById('active-steps-count'),
+        // 屬性面板
+        noSelectionHint: document.getElementById('no-selection-hint'),
+        selectionForm: document.getElementById('selection-form'),
+        propType: document.getElementById('prop-type'),
+        propId: document.getElementById('prop-id'),
+        propDesc: document.getElementById('prop-desc'),
+        stepActionsContainer: document.getElementById('step-actions-container'),
+        propActionCmd: document.getElementById('prop-action-cmd'),
+        propActionQualifier: document.getElementById('prop-action-qualifier'),
+        tranCondContainer: document.getElementById('tran-condition-container'),
+        propCondExpr: document.getElementById('prop-condition-expr'),
+        btnSaveProps: document.getElementById('btn-save-props'),
+        // 頁籤
+        tabProp: document.getElementById('tab-prop'),
+        tabLadder: document.getElementById('tab-ladder'),
+        paneProp: document.getElementById('pane-prop'),
+        paneLadder: document.getElementById('pane-ladder'),
+        ladderCanvas: document.getElementById('ladder-canvas'),
+        // 範本與導出
+        templateSelect: document.getElementById('template-select'),
+        btnLoadTemplate: document.getElementById('btn-load-template'),
+        btnExportIl: document.getElementById('btn-export-il'),
+        btnClearCanvas: document.getElementById('btn-clear-canvas'),
+        // 模態視窗
+        modalIl: document.getElementById('modal-il'),
+        ilOutputCode: document.getElementById('il-output-code'),
+        btnCopyIl: document.getElementById('btn-copy-il'),
+        btnCloseIl: document.getElementById('btn-close-il'),
+        btnCloseModal: document.getElementById('btn-close-modal'),
+        // 日誌
+        sysLog: document.getElementById('sys-log')
+      };
+
+      // 預設工藝範本
+      const templates = {
+        press: {
+          name: "氣缸沖壓與鑽孔循序加工",
+          nodes: [
+            { id: "S0", type: "step", isInit: true, x: 260, y: 40, desc: "初始就緒待命", action: { cmd: "", qualifier: "N" } },
+            { id: "TR1", type: "tran", x: 260, y: 130, desc: "啟動按鈕", condition: "X0" },
+            { id: "S20", type: "step", isInit: false, x: 260, y: 190, desc: "氣缸夾緊工件", action: { cmd: "OUT Y0", qualifier: "N" } },
+            { id: "TR2", type: "tran", x: 260, y: 280, desc: "夾緊到位", condition: "X1" },
+            { id: "S21", type: "step", isInit: false, x: 260, y: 340, desc: "鑽孔馬達與沖壓計時", action: { cmd: "OUT Y1 \nOUT T0 K30", qualifier: "N" } },
+            { id: "TR3", type: "tran", x: 260, y: 430, desc: "沖壓時間到", condition: "T0" },
+            { id: "S22", type: "step", isInit: false, x: 260, y: 490, desc: "氣缸退回原點", action: { cmd: "OUT Y2", qualifier: "N" } },
+            { id: "TR4", type: "tran", x: 260, y: 580, desc: "退回到位", condition: "X2" }
+          ],
+          connections: [
+            { from: "S0", to: "TR1" },
+            { from: "TR1", to: "S20" },
+            { from: "S20", to: "TR2" },
+            { from: "TR2", to: "S21" },
+            { from: "S21", to: "TR3" },
+            { from: "TR3", to: "S22" },
+            { from: "S22", to: "TR4" },
+            { from: "TR4", to: "S0", isLoopBack: true }
+          ]
+        },
+        traffic: {
+          name: "十字路口三色交通號誌",
+          nodes: [
+            { id: "S0", type: "step", isInit: true, x: 260, y: 40, desc: "主控上電就緒", action: { cmd: "", qualifier: "N" } },
+            { id: "TR1", type: "tran", x: 260, y: 130, desc: "啟動開關", condition: "X0" },
+            { id: "S10", type: "step", isInit: false, x: 260, y: 190, desc: "綠燈通行 (Y0)", action: { cmd: "OUT Y0 \nOUT T0 K30", qualifier: "N" } },
+            { id: "TR2", type: "tran", x: 260, y: 280, desc: "綠燈時間到", condition: "T0" },
+            { id: "S11", type: "step", isInit: false, x: 260, y: 340, desc: "黃燈警示 (Y1)", action: { cmd: "OUT Y1 \nOUT T1 K20", qualifier: "N" } },
+            { id: "TR3", type: "tran", x: 260, y: 430, desc: "黃燈時間到", condition: "T1" },
+            { id: "S12", type: "step", isInit: false, x: 260, y: 490, desc: "紅燈禁行 (Y2)", action: { cmd: "OUT Y2", qualifier: "N" } },
+            { id: "TR4", type: "tran", x: 260, y: 580, desc: "手動或傳感器轉移", condition: "X1" }
+          ],
+          connections: [
+            { from: "S0", to: "TR1" },
+            { from: "TR1", to: "S10" },
+            { from: "S10", to: "TR2" },
+            { from: "TR2", to: "S11" },
+            { from: "S11", to: "TR3" },
+            { from: "TR3", to: "S12" },
+            { from: "S12", to: "TR4" },
+            { from: "TR4", to: "S10", isLoopBack: true }
+          ]
+        },
+        conveyor: {
+          name: "雙工位分選流水線",
+          nodes: [
+            { id: "S0", type: "step", isInit: true, x: 260, y: 50, desc: "主輸送帶待機", action: { cmd: "", qualifier: "N" } },
+            { id: "TR1", type: "tran", x: 260, y: 140, desc: "入料傳感器", condition: "X0" },
+            { id: "S30", type: "step", isInit: false, x: 260, y: 210, desc: "傳送馬達啟動", action: { cmd: "OUT Y3", qualifier: "N" } },
+            { id: "TR2", type: "tran", x: 260, y: 300, desc: "工件到位偵測", condition: "X3" },
+            { id: "S31", type: "step", isInit: false, x: 260, y: 370, desc: "推料氣缸分選", action: { cmd: "OUT Y4", qualifier: "N" } },
+            { id: "TR3", type: "tran", x: 260, y: 460, desc: "分選完成", condition: "X4" }
+          ],
+          connections: [
+            { from: "S0", to: "TR1" },
+            { from: "TR1", to: "S30" },
+            { from: "S30", to: "TR2" },
+            { from: "TR2", to: "S31" },
+            { from: "S31", to: "TR3" },
+            { from: "TR3", to: "S0", isLoopBack: true }
+          ]
+        }
+      };
+
+      // 日誌記錄
+      function logMsg(msg) {
+        const d = new Date();
+        const time = d.toTimeString().split(' ')[0];
+        const row = document.createElement('div');
+        row.className = 'log-entry';
+        row.innerHTML = `<span class="log-time">[${time}]</span> ${msg}`;
+        dom.sysLog.appendChild(row);
+        dom.sysLog.scrollTop = dom.sysLog.scrollHeight;
+      }
+
+      // 初始化畫布渲染
+      function renderCanvas() {
+        // 清理節點層
+        dom.nodesLayer.innerHTML = '';
+
+        // 渲染所有節點
+        state.nodes.forEach(node => {
+          const el = document.createElement('div');
+          el.className = `sfc-node ${node.id === state.selectedNodeId ? 'selected' : ''}`;
+          el.id = `node-${node.id}`;
+          el.style.left = `${node.x}px`;
+          el.style.top = `${node.y}px`;
+
+          if (node.type === 'step') {
+            const isActive = state.plc.activeStepIds.has(node.id);
+            el.innerHTML = `
+              <div class="sfc-step ${node.isInit ? 'init' : ''} ${isActive ? 'active' : ''}">
+                <div class="port port-in" data-port-type="in"></div>
+                <div class="step-id">${node.id}</div>
+                <div class="step-label">${node.desc || ''}</div>
+                <div class="port port-out" data-port-type="out"></div>
+              </div>
+              ${node.action && node.action.cmd ? `
+                <div class="sfc-action-box">
+                  <div class="action-qualifier">${node.action.qualifier || 'N'}</div>
+                  <div class="action-cmd">${node.action.cmd.replace(/\n/g, '<br>')}</div>
+                </div>
+              ` : ''}
+            `;
+          } else if (node.type === 'tran') {
+            // 判斷該轉移條件所屬前驅步是否激活
+            const preStep = findPrecedingStep(node.id);
+            const isPreActive = preStep && state.plc.activeStepIds.has(preStep.id);
+            const isConditionMet = evaluateCondition(node.condition);
+            const isArmed = isPreActive && isConditionMet;
+
+            el.innerHTML = `
+              <div class="sfc-transition ${isArmed ? 'active' : ''}">
+                <div class="port port-in" data-port-type="in"></div>
+                <div class="tran-bar"></div>
+                <div class="tran-label">${node.condition || 'TRUE'}</div>
+                <div class="port port-out" data-port-type="out"></div>
+              </div>
+            `;
+          }
+
+          // 綁定節點事件
+          bindNodeEvents(el, node);
+          dom.nodesLayer.appendChild(el);
+        });
+
+        // 渲染連線
+        renderConnections();
+        updateUIStatus();
+      }
+
+      // 尋找轉移條件的前置步
+      function findPrecedingStep(tranId) {
+        const inConn = state.connections.find(c => c.to === tranId);
+        if (!inConn) return null;
+        return state.nodes.find(n => n.id === inConn.from);
+      }
+
+      // 渲染連線 SVG
+      function renderConnections() {
+        // 清理除 defs 以外的 SVG 元素
+        const paths = dom.svgLayer.querySelectorAll('path.sfc-line');
+        paths.forEach(p => p.remove());
+
+        state.connections.forEach(conn => {
+          const fromNode = state.nodes.find(n => n.id === conn.from);
+          const toNode = state.nodes.find(n => n.id === conn.to);
+          if (!fromNode || !toNode) return;
+
+          // 計算連線座標
+          const fromW = 110;
+          const fromH = fromNode.type === 'step' ? 52 : 28;
+          const toW = 110;
+
+          const startX = fromNode.x + fromW / 2;
+          const startY = fromNode.y + fromH;
+
+          const endX = toNode.x + toW / 2;
+          const endY = toNode.y;
+
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          
+          let d = '';
+          if (conn.isLoopBack || startY > endY) {
+            // 循環反饋回環線 (折線繞左側)
+            const detourX = Math.min(fromNode.x, toNode.x) - 40;
+            d = `M ${startX} ${startY} L ${startX} ${startY + 20} L ${detourX} ${startY + 20} L ${detourX} ${endY - 20} L ${endX} ${endY - 20} L ${endX} ${endY}`;
+          } else {
+            // 正常垂直向下或 S 型折線
+            if (Math.abs(startX - endX) < 4) {
+              d = `M ${startX} ${startY} L ${endX} ${endY}`;
+            } else {
+              const midY = (startY + endY) / 2;
+              d = `M ${startX} ${startY} L ${startX} ${midY} L ${endX} ${midY} L ${endX} ${endY}`;
+            }
+          }
+
+          path.setAttribute('d', d);
+          const isFromActive = state.plc.activeStepIds.has(conn.from);
+          path.setAttribute('class', `sfc-line ${isFromActive ? 'active' : ''}`);
+          path.setAttribute('marker-end', isFromActive ? 'url(#arrow-active)' : 'url(#arrow)');
+
+          dom.svgLayer.appendChild(path);
+        });
+      }
+
+      // 節點事件 (選中、拖曳、連線端口)
+      function bindNodeEvents(el, node) {
+        // 點擊選中
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectNode(node.id);
+        });
+
+        // 端口點擊 (連線模式)
+        const ports = el.querySelectorAll('.port');
+        ports.forEach(port => {
+          port.addEventListener('click', (e) => {
+            e.stopPropagation();
+            handlePortClick(node, port.getAttribute('data-port-type'));
+          });
+        });
+
+        // 拖曳處理
+        let isDragging = false;
+        let startX, startY;
+        let origNodeX, origNodeY;
+
+        el.addEventListener('mousedown', (e) => {
+          if (e.target.classList.contains('port')) return;
+          if (state.mode !== 'select') return;
+          isDragging = true;
+          startX = e.clientX;
+          startY = e.clientY;
+          origNodeX = node.x;
+          origNodeY = node.y;
+
+          const onMouseMove = (ev) => {
+            if (!isDragging) return;
+            const dx = ev.clientX - startX;
+            const dy = ev.clientY - startY;
+            node.x = Math.max(20, origNodeX + dx);
+            node.y = Math.max(20, origNodeY + dy);
+            el.style.left = `${node.x}px`;
+            el.style.top = `${node.y}px`;
+            renderConnections();
+          };
+
+          const onMouseUp = () => {
+            isDragging = false;
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+          };
+
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+        });
+      }
+
+      // 端口連線邏輯
+      function handlePortClick(node, portType) {
+        if (!state.connectStartNodeId) {
+          if (portType !== 'out') {
+            logMsg(`請先點選上級步驟或轉移的【輸出端口】(下端點)`);
+            return;
+          }
+          state.connectStartNodeId = node.id;
+          logMsg(`已選定起始節點 [${node.id}]，請點選目標節點的【輸入端口】(上端點)`);
+          dom.container.classList.add('connecting');
+        } else {
+          if (portType !== 'in') {
+            logMsg(`目標節點必須點選【輸入端口】(上端點)`);
+            return;
+          }
+          if (state.connectStartNodeId === node.id) {
+            logMsg(`不能連接到節點本身`);
+            state.connectStartNodeId = null;
+            dom.container.classList.remove('connecting');
+            return;
+          }
+
+          // 驗證三菱 SFC 規則：Step 只能連 Transition，Transition 只能連 Step
+          const fromNode = state.nodes.find(n => n.id === state.connectStartNodeId);
+          const toNode = node;
+
+          if (fromNode.type === toNode.type) {
+            logMsg(`[語法錯誤] SFC 規則：步 (Step) 必須與轉移 (Transition) 交替連接，不可直接相連！`);
+            state.connectStartNodeId = null;
+            dom.container.classList.remove('connecting');
+            return;
+          }
+
+          // 判斷是否為回環
+          const isLoopBack = fromNode.y > toNode.y;
+
+          // 檢查重複
+          const exists = state.connections.some(c => c.from === fromNode.id && c.to === toNode.id);
+          if (!exists) {
+            state.connections.push({ from: fromNode.id, to: toNode.id, isLoopBack });
+            logMsg(`成功建立連線: [${fromNode.id}] ➔ [${toNode.id}]`);
+          }
+
+          state.connectStartNodeId = null;
+          dom.container.classList.remove('connecting');
+          renderCanvas();
+        }
+      }
+
+      // 選擇節點並載入屬性
+      function selectNode(id) {
+        state.selectedNodeId = id;
+        const node = state.nodes.find(n => n.id === id);
+
+        // 更新畫布高亮
+        document.querySelectorAll('.sfc-node').forEach(el => el.classList.remove('selected'));
+        if (id) {
+          const el = document.getElementById(`node-${id}`);
+          if (el) el.classList.add('selected');
+        }
+
+        if (!node) {
+          dom.noSelectionHint.style.display = 'block';
+          dom.selectionForm.style.display = 'none';
+          dom.ladderCanvas.innerHTML = '<div style="color:#64748b; font-size:12px; text-align:center; padding-top:40px;">請先選擇節點以查看梯形圖</div>';
+          return;
+        }
+
+        dom.noSelectionHint.style.display = 'none';
+        dom.selectionForm.style.display = 'block';
+
+        dom.propType.value = node.type === 'step' ? (node.isInit ? '初始步 (Initial Step)' : '一般步 (Step)') : '轉移條件 (Transition)';
+        dom.propId.value = node.id;
+        dom.propDesc.value = node.desc || '';
+
+        if (node.type === 'step') {
+          dom.stepActionsContainer.style.display = 'block';
+          dom.tranCondContainer.style.display = 'none';
+          dom.propActionCmd.value = (node.action && node.action.cmd) || '';
+          dom.propActionQualifier.value = (node.action && node.action.qualifier) || 'N';
+        } else {
+          dom.stepActionsContainer.style.display = 'none';
+          dom.tranCondContainer.style.display = 'block';
+          dom.propCondExpr.value = node.condition || '';
+        }
+
+        // 渲染對應梯形圖
+        renderLadderDiagram(node);
+      }
+
+      // 儲存編輯屬性
+      dom.btnSaveProps.addEventListener('click', () => {
+        if (!state.selectedNodeId) return;
+        const node = state.nodes.find(n => n.id === state.selectedNodeId);
+        if (!node) return;
+
+        const newId = dom.propId.value.trim().toUpperCase();
+        if (newId && newId !== node.id) {
+          // 檢查 ID 重複
+          if (state.nodes.some(n => n.id === newId)) {
+            alert('軟元件編號已存在，請使用不同名稱！');
+            return;
+          }
+          // 批次更新連線
+          state.connections.forEach(c => {
+            if (c.from === node.id) c.from = newId;
+            if (c.to === node.id) c.to = newId;
+          });
+          if (state.plc.activeStepIds.has(node.id)) {
+            state.plc.activeStepIds.delete(node.id);
+            state.plc.activeStepIds.add(newId);
+          }
+          node.id = newId;
+          state.selectedNodeId = newId;
+        }
+
+        node.desc = dom.propDesc.value.trim();
+
+        if (node.type === 'step') {
+          node.action = {
+            cmd: dom.propActionCmd.value.trim(),
+            qualifier: dom.propActionQualifier.value
+          };
+        } else {
+          node.condition = dom.propCondExpr.value.trim().toUpperCase();
+        }
+
+        logMsg(`節點 [${node.id}] 屬性已更新。`);
+        renderCanvas();
+        selectNode(node.id);
+      });
+
+      // 渲染三菱風格梯形圖 (Ladder Diagram SVG)
+      function renderLadderDiagram(node) {
+        if (node.type === 'step') {
+          const actionCmd = (node.action && node.action.cmd) || 'NOP';
+          const rungs = actionCmd.split('\n').filter(Boolean);
+          
+          let rungsHtml = '';
+          rungs.forEach((cmd, idx) => {
+            const isTimer = cmd.includes('T0') || cmd.includes('T1');
+            rungsHtml += `
+              <div class="ladder-rung">
+                <svg width="100%" height="56" viewBox="0 0 280 56">
+                  <!-- 左母線 -->
+                  <line x1="10" y1="0" x2="10" y2="56" stroke="#3b82f6" stroke-width="3" />
+                  <!-- STL 步進觸點 -->
+                  <line x1="10" y1="28" x2="40" y2="28" stroke="#94a3b8" stroke-width="2" />
+                  <line x1="40" y1="14" x2="40" y2="42" stroke="#60a5fa" stroke-width="2" />
+                  <line x1="56" y1="14" x2="56" y2="42" stroke="#60a5fa" stroke-width="2" />
+                  <text x="48" y="10" fill="#93c5fd" font-size="10" font-family="monospace" text-anchor="middle">STL ${node.id}</text>
+                  <!-- 橫線到線圈 -->
+                  <line x1="56" y1="28" x2="190" y2="28" stroke="#94a3b8" stroke-width="2" />
+                  <!-- 輸出線圈 ( ) 或指令方塊 [ ] -->
+                  ${isTimer ? `
+                    <rect x="190" y="14" width="75" height="28" fill="#1e293b" stroke="#f59e0b" stroke-width="1.5" />
+                    <text x="227" y="32" fill="#fbbf24" font-size="10" font-family="monospace" text-anchor="middle">${cmd}</text>
+                  ` : `
+                    <path d="M 195 16 C 190 28, 190 28, 195 40" stroke="#34d399" stroke-width="2" fill="none" />
+                    <path d="M 235 16 C 240 28, 240 28, 235 40" stroke="#34d399" stroke-width="2" fill="none" />
+                    <text x="215" y="32" fill="#6ee7b7" font-size="11" font-family="monospace" text-anchor="middle">${cmd.replace('OUT ', '')}</text>
+                    <line x1="235" y1="28" x2="270" y2="28" stroke="#94a3b8" stroke-width="2" />
+                  `}
+                  <!-- 右母線 -->
+                  <line x1="270" y1="0" x2="270" y2="56" stroke="#3b82f6" stroke-width="3" />
+                </svg>
+              </div>
+            `;
+          });
+
+          dom.ladderCanvas.innerHTML = rungsHtml || '<div style="color:#64748b; font-size:12px; text-align:center; padding-top:40px;">此步無關聯輸出動作</div>';
+        } else if (node.type === 'tran') {
+          const preStep = findPrecedingStep(node.id);
+          const nextConn = state.connections.find(c => c.from === node.id);
+          const nextStepId = nextConn ? nextConn.to : 'Sxx';
+
+          dom.ladderCanvas.innerHTML = `
+            <div class="ladder-rung">
+              <svg width="100%" height="56" viewBox="0 0 280 56">
+                <!-- 左母線 -->
+                <line x1="10" y1="0" x2="10" y2="56" stroke="#3b82f6" stroke-width="3" />
+                <!-- 步進接點 -->
+                <line x1="10" y1="28" x2="35" y2="28" stroke="#94a3b8" stroke-width="2" />
+                <line x1="35" y1="14" x2="35" y2="42" stroke="#60a5fa" stroke-width="2" />
+                <line x1="48" y1="14" x2="48" y2="42" stroke="#60a5fa" stroke-width="2" />
+                <text x="42" y="10" fill="#93c5fd" font-size="9" font-family="monospace" text-anchor="middle">STL ${preStep ? preStep.id : 'S--'}</text>
+                
+                <!-- 轉移條件常開接點 -->
+                <line x1="48" y1="28" x2="85" y2="28" stroke="#94a3b8" stroke-width="2" />
+                <line x1="85" y1="14" x2="85" y2="42" stroke="#fbbf24" stroke-width="2" />
+                <line x1="98" y1="14" x2="98" y2="42" stroke="#fbbf24" stroke-width="2" />
+                <text x="92" y="10" fill="#fde68a" font-size="10" font-family="monospace" text-anchor="middle">${node.condition || 'TRUE'}</text>
+
+                <!-- 導線到轉移指令 -->
+                <line x1="98" y1="28" x2="175" y2="28" stroke="#94a3b8" stroke-width="2" />
+
+                <!-- 置位下一步 SET Sxx 方塊 -->
+                <rect x="175" y="14" width="85" height="28" fill="#1e293b" stroke="#10b981" stroke-width="1.5" />
+                <text x="217" y="32" fill="#6ee7b7" font-size="11" font-family="monospace" text-anchor="middle">SET ${nextStepId}</text>
+                <line x1="260" y1="28" x2="270" y2="28" stroke="#94a3b8" stroke-width="2" />
+
+                <!-- 右母線 -->
+                <line x1="270" y1="0" x2="270" y2="56" stroke="#3b82f6" stroke-width="3" />
+              </svg>
+            </div>
+          `;
+        }
+      }
+
+      // 載入範本
+      function loadTemplate(key) {
+        const t = templates[key];
+        if (!t) return;
+        state.nodes = JSON.parse(JSON.stringify(t.nodes));
+        state.connections = JSON.parse(JSON.stringify(t.connections));
+        state.selectedNodeId = null;
+        resetPLC();
+        renderCanvas();
+        selectNode(null);
+        logMsg(`已成功載入工程範本: 【${t.name}】`);
+      }
+
+      // 快速新增步
+      document.getElementById('add-init-step').addEventListener('click', () => {
+        const id = 'S' + Math.floor(Math.random() * 5);
+        state.nodes.push({
+          id: id,
+          type: 'step',
+          isInit: true,
+          x: 100,
+          y: 60,
+          desc: '新初始步',
+          action: { cmd: '', qualifier: 'N' }
+        });
+        renderCanvas();
+        selectNode(id);
+      });
+
+      document.getElementById('add-step').addEventListener('click', () => {
+        const nextNum = 20 + state.nodes.filter(n => n.type === 'step').length;
+        const id = 'S' + nextNum;
+        state.nodes.push({
+          id: id,
+          type: 'step',
+          isInit: false,
+          x: 100,
+          y: 160,
+          desc: '工序步驟 ' + nextNum,
+          action: { cmd: 'OUT Y0', qualifier: 'N' }
+        });
+        renderCanvas();
+        selectNode(id);
+      });
+
+      document.getElementById('add-tran').addEventListener('click', () => {
+        const trNum = state.nodes.filter(n => n.type === 'tran').length + 1;
+        const id = 'TR' + trNum;
+        state.nodes.push({
+          id: id,
+          type: 'tran',
+          x: 100,
+          y: 260,
+          desc: '轉移條件',
+          condition: 'X0'
+        });
+        renderCanvas();
+        selectNode(id);
+      });
+
+      // 刪除選中節點
+      dom.toolDelete.addEventListener('click', () => {
+        if (!state.selectedNodeId) {
+          logMsg('請先點選欲刪除的節點。');
+          return;
+        }
+        const id = state.selectedNodeId;
+        state.nodes = state.nodes.filter(n => n.id !== id);
+        state.connections = state.connections.filter(c => c.from !== id && c.to !== id);
+        state.plc.activeStepIds.delete(id);
+        state.selectedNodeId = null;
+        logMsg(`節點 [${id}] 及其相聯連線已移除。`);
+        renderCanvas();
+        selectNode(null);
+      });
+
+      // 清空畫布
+      dom.btnClearCanvas.addEventListener('click', () => {
+        if (!confirm('確定要清空畫布上的所有 SFC 圖元與連線嗎？')) return;
+        state.nodes = [];
+        state.connections = [];
+        state.selectedNodeId = null;
+        resetPLC();
+        renderCanvas();
+        selectNode(null);
+        logMsg('畫布已清空。');
+      });
+
+      // 工具切換
+      dom.toolSelect.addEventListener('click', () => {
+        state.mode = 'select';
+        state.connectStartNodeId = null;
+        dom.toolSelect.classList.add('active');
+        dom.toolConnect.classList.remove('active');
+        dom.connTip.style.display = 'none';
+        dom.container.classList.remove('connecting');
+      });
+
+      dom.toolConnect.addEventListener('click', () => {
+        state.mode = 'connect';
+        state.connectStartNodeId = null;
+        dom.toolConnect.classList.add('active');
+        dom.toolSelect.classList.remove('active');
+        dom.connTip.style.display = 'block';
+        logMsg('進入連線模式：請點擊源步驟的下端點，再點擊目標的頂部端點');
+      });
+
+      // 頁籤切換
+      dom.tabProp.addEventListener('click', () => {
+        dom.tabProp.classList.add('active');
+        dom.tabLadder.classList.remove('active');
+        dom.paneProp.style.display = 'block';
+        dom.paneLadder.style.display = 'none';
+      });
+
+      dom.tabLadder.addEventListener('click', () => {
+        dom.tabLadder.classList.add('active');
+        dom.tabProp.classList.remove('active');
+        dom.paneLadder.style.display = 'block';
+        dom.paneProp.style.display = 'none';
+        if (state.selectedNodeId) {
+          const node = state.nodes.find(n => n.id === state.selectedNodeId);
+          if (node) renderLadderDiagram(node);
+        }
+      });
+
+      // ==========================================
+      // PLC 仿真運算引擎 (Simulation Engine)
+      // ==========================================
+
+      // 評估轉移條件真值
+      function evaluateCondition(expr) {
+        if (!expr || expr === 'TRUE') return true;
+        
+        let normalized = expr.trim().toUpperCase();
+
+        // 檢查計時器 T
+        normalized = normalized.replace(/\bT(\d+)\b/g, (m, num) => {
+          const t = state.plc.timers['T' + num];
+          return t && t.done ? 'true' : 'false';
+        });
+
+        // 檢查輸入 X
+        normalized = normalized.replace(/\bX(\d+)\b/g, (m, num) => {
+          return state.plc.inputs['X' + num] ? 'true' : 'false';
+        });
+
+        // 檢查輸出 Y
+        normalized = normalized.replace(/\bY(\d+)\b/g, (m, num) => {
+          return state.plc.outputs['Y' + num] ? 'true' : 'false';
+        });
+
+        // 檢查輔助繼電器 M
+        normalized = normalized.replace(/\bM(\d+)\b/g, (m, num) => {
+          return state.plc.memory['M' + num] ? 'true' : 'false';
+        });
+
+        // 替換 AND, OR, NOT
+        normalized = normalized.replace(/\bAND\b/g, '&&');
+        normalized = normalized.replace(/\bOR\b/g, '||');
+        normalized = normalized.replace(/\bNOT\b/g, '!');
+
+        try {
+          return Function(`"use strict"; return Boolean(${normalized});`)();
+        } catch (e) {
+          return false;
+        }
+      }
+
+      // 執行一次掃描週期 (Scan Cycle)
+      function executeScanCycle() {
+        const activeSteps = Array.from(state.plc.activeStepIds);
+        const stepsToDeactivate = new Set();
+        const stepsToActivate = new Set();
+
+        // 1. 刷新動作輸出 (清空非保持型輸出)
+        const newOutputs = { Y0: false, Y1: false, Y2: false, Y3: false, Y4: false, Y5: false, Y6: false, Y7: false };
+        let t0Active = false;
+        let t1Active = false;
+
+        activeSteps.forEach(stepId => {
+          const stepNode = state.nodes.find(n => n.id === stepId && n.type === 'step');
+          if (stepNode && stepNode.action && stepNode.action.cmd) {
+            const cmds = stepNode.action.cmd.split('\n');
+            cmds.forEach(cmd => {
+              const c = cmd.trim().toUpperCase();
+              if (c.startsWith('OUT Y')) {
+                const pin = c.replace('OUT ', '').trim();
+                if (newOutputs[pin] !== undefined) newOutputs[pin] = true;
+              } else if (c.includes('OUT T0')) {
+                t0Active = true;
+              } else if (c.includes('OUT T1')) {
+                t1Active = true;
+              }
+            });
+          }
+        });
+
+        state.plc.outputs = newOutputs;
+
+        // 2. 計時器推進 (以 100ms 基準步進)
+        if (t0Active) {
+          if (!state.plc.timers.T0.done) {
+            state.plc.timers.T0.current += 1;
+            if (state.plc.timers.T0.current >= state.plc.timers.T0.target) {
+              state.plc.timers.T0.done = true;
+              logMsg('計時器 T0 達到預設值 K30 (3.0s)，接點導通！');
+            }
+          }
+        } else {
+          state.plc.timers.T0.current = 0;
+          state.plc.timers.T0.done = false;
+        }
+
+        if (t1Active) {
+          if (!state.plc.timers.T1.done) {
+            state.plc.timers.T1.current += 1;
+            if (state.plc.timers.T1.current >= state.plc.timers.T1.target) {
+              state.plc.timers.T1.done = true;
+              logMsg('計時器 T1 達到預設值 K20 (2.0s)，接點導通！');
+            }
+          }
+        } else {
+          state.plc.timers.T1.current = 0;
+          state.plc.timers.T1.done = false;
+        }
+
+        // 3. 轉移條件檢測
+        activeSteps.forEach(stepId => {
+          // 找到所有以該步為起點的連線 (Step -> Transition)
+          const outgoingToTrans = state.connections.filter(c => c.from === stepId);
+          outgoingToTrans.forEach(outConn => {
+            const tranNode = state.nodes.find(n => n.id === outConn.to && n.type === 'tran');
+            if (tranNode) {
+              const condMet = evaluateCondition(tranNode.condition);
+              if (condMet) {
+                // 轉移條件成立！尋找該轉移指向的下一步 (Transition -> Step)
+                const nextStepConns = state.connections.filter(c => c.from === tranNode.id);
+                nextStepConns.forEach(nextConn => {
+                  const targetStep = state.nodes.find(n => n.id === nextConn.to && n.type === 'step');
+                  if (targetStep) {
+                    stepsToDeactivate.add(stepId);
+                    stepsToActivate.add(targetStep.id);
+                    logMsg(`步進轉移成功: [${stepId}] ➔ [${targetStep.id}] (條件 [${tranNode.condition}] 成立)`);
+                  }
+                });
+              }
+            }
+          });
+        });
+
+        // 4. 更新激活步
+        if (stepsToDeactivate.size > 0 || stepsToActivate.size > 0) {
+          stepsToDeactivate.forEach(s => state.plc.activeStepIds.delete(s));
+          stepsToActivate.forEach(s => state.plc.activeStepIds.add(s));
+          renderCanvas();
+        }
+
+        updateUIStatus();
+      }
+
+      // 更新控制台介面與指示燈
+      function updateUIStatus() {
+        // 更新 Y 輸出指示燈
+        for (let i = 0; i <= 7; i++) {
+          const pin = 'Y' + i;
+          const el = document.getElementById('y-out-' + pin);
+          if (el) {
+            if (state.plc.outputs[pin]) {
+              el.classList.add('on');
+            } else {
+              el.classList.remove('on');
+            }
+          }
+        }
+
+        // 更新計時器顯示
+        const t0Text = (state.plc.timers.T0.current / 10).toFixed(1) + 's / 3.0s' + (state.plc.timers.T0.done ? ' (UP)' : '');
+        document.getElementById('timer-val-T0').innerText = t0Text;
+
+        const t1Text = (state.plc.timers.T1.current / 10).toFixed(1) + 's / 2.0s' + (state.plc.timers.T1.done ? ' (UP)' : '');
+        document.getElementById('timer-val-T1').innerText = t1Text;
+
+        // 頂部狀態列
+        const activeArray = Array.from(state.plc.activeStepIds);
+        dom.currentStepDisplay.innerText = activeArray.join(', ') || '無 (STOP)';
+        dom.activeCountDisplay.innerText = activeArray.length;
+      }
+
+      // 啟動 PLC 運行
+      function runPLC() {
+        if (state.plc.running) return;
+        state.plc.running = true;
+        dom.ledRun.classList.add('active');
+        dom.ledStop.classList.remove('active');
+        logMsg('PLC 進入在線運行模式 (RUN MODE)。');
+
+        state.plc.scanInterval = setInterval(() => {
+          executeScanCycle();
+        }, 100); // 100ms 仿真掃描節奏
+      }
+
+      // 停止 PLC 運行
+      function stopPLC() {
+        state.plc.running = false;
+        if (state.plc.scanInterval) {
+          clearInterval(state.plc.scanInterval);
+          state.plc.scanInterval = null;
+        }
+        dom.ledRun.classList.remove('active');
+        dom.ledStop.classList.add('active');
+        logMsg('PLC 已停止運行 (STOP MODE)。');
+      }
+
+      // 單步執行 (Step)
+      function singleStepPLC() {
+        if (state.plc.running) {
+          stopPLC();
+        }
+        logMsg('執行單步觸發推動...');
+        executeScanCycle();
+      }
+
+      // 複位 PLC (Reset)
+      function resetPLC() {
+        state.plc.activeStepIds.clear();
+        const initStep = state.nodes.find(n => n.type === 'step' && n.isInit);
+        if (initStep) {
+          state.plc.activeStepIds.add(initStep.id);
+        } else if (state.nodes.length > 0) {
+          const firstStep = state.nodes.find(n => n.type === 'step');
+          if (firstStep) state.plc.activeStepIds.add(firstStep.id);
+        }
+        // 重置所有計時器
+        state.plc.timers.T0.current = 0;
+        state.plc.timers.T0.done = false;
+        state.plc.timers.T1.current = 0;
+        state.plc.timers.T1.done = false;
+        // 重置輸出
+        for (let k in state.plc.outputs) state.plc.outputs[k] = false;
+
+        logMsg('PLC 狀態已復位至初始步。');
+        renderCanvas();
+        updateUIStatus();
+      }
+
+      // 綁定 X 輸入點擊切換
+      document.querySelectorAll('.io-btn[data-pin]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const pin = btn.getAttribute('data-pin');
+          state.plc.inputs[pin] = !state.plc.inputs[pin];
+          btn.classList.toggle('on', state.plc.inputs[pin]);
+          logMsg(`輸入點 [${pin}] 切換為: ${state.plc.inputs[pin] ? 'ON (導通)' : 'OFF (斷開)'}`);
+          
+          if (!state.plc.running) {
+            // 在 STOP 模式下也進行一次狀態更新
+            renderCanvas();
+            updateUIStatus();
+          }
+        });
+      });
+
+      // 綁定主控制按鈕
+      dom.btnRun.addEventListener('click', runPLC);
+      dom.btnStop.addEventListener('click', stopPLC);
+      dom.btnStep.addEventListener('click', singleStepPLC);
+      dom.btnReset.addEventListener('click', resetPLC);
+
+      dom.btnLoadTemplate.addEventListener('click', () => {
+        loadTemplate(dom.templateSelect.value);
+      });
+
+      // 導出三菱 STL 指令表
+      dom.btnExportIl.addEventListener('click', () => {
+        let code = `; ===================================================\n`;
+        code += `; 三菱電機 FX3U/5U 系列 順控步進指令表 (STL)\n`;
+        code += `; 生成時間: ${new Date().toLocaleString()}\n`;
+        code += `; ===================================================\n\n`;
+
+        // 初始步定義
+        const initSteps = state.nodes.filter(n => n.type === 'step' && n.isInit);
+        if (initSteps.length > 0) {
+          code += `; --- 初始脈衝 M8002 激活初始步 ---\n`;
+          code += `LD    M8002\n`;
+          initSteps.forEach(s => {
+            code += `SET   ${s.id}\n`;
+          });
+          code += `\n`;
+        }
+
+        // 遍歷所有 Step
+        const steps = state.nodes.filter(n => n.type === 'step');
+        steps.forEach(step => {
+          code += `; -----------------------------------\n`;
+          code += `; 步進狀態: ${step.id} (${step.desc || '無註釋'})\n`;
+          code += `STL   ${step.id}\n`;
+
+          // 輸出動作
+          if (step.action && step.action.cmd) {
+            const cmds = step.action.cmd.split('\n');
+            cmds.forEach(c => {
+              if (c.trim()) code += `  ${c.trim()}\n`;
+            });
+          }
+
+          // 轉移條件
+          const outTrans = state.connections
+            .filter(c => c.from === step.id)
+            .map(c => state.nodes.find(n => n.id === c.to && n.type === 'tran'))
+            .filter(Boolean);
+
+          outTrans.forEach(tr => {
+            const nextSteps = state.connections
+              .filter(c => c.from === tr.id)
+              .map(c => c.to);
+
+            code += `  ; 轉移條件: ${tr.condition || 'TRUE'} (${tr.desc || ''})\n`;
+            const cond = tr.condition || 'TRUE';
+            code += `  LD    ${cond}\n`;
+            nextSteps.forEach(ns => {
+              code += `  SET   ${ns}\n`;
+            });
+          });
+          code += `\n`;
+        });
+
+        code += `; --- 步進結束，返回主母線 ---\n`;
+        code += `RET\n`;
+        code += `END\n`;
+
+        dom.ilOutputCode.value = code;
+        dom.modalIl.style.display = 'flex';
+      });
+
+      // 關閉模態視窗
+      dom.btnCloseIl.addEventListener('click', () => dom.modalIl.style.display = 'none');
+      dom.btnCloseModal.addEventListener('click', () => dom.modalIl.style.display = 'none');
+      dom.btnCopyIl.addEventListener('click', () => {
+        dom.ilOutputCode.select();
+        document.execCommand('copy');
+        alert('STL 指令表代碼已成功複製到剪貼簿！');
+      });
+
+      // 預設載入氣缸範本
+      loadTemplate('press');
+
+      // 預設自動啟動 PLC 運行
+      runPLC();
+    })();
+  </script>
+</body>
+</html>

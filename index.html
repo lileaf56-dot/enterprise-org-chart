@@ -1,0 +1,3574 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>組織架構管理系統</title>
+  <style>
+    /* ========================================================
+       企業級設計系統與多主題配色
+       ======================================================== */
+    :root {
+      --brand-blue: #1971c2;
+      --brand-blue-hover: #1864ab;
+      --brand-blue-light: #e7f5ff;
+      --brand-blue-border: #a5d8ff;
+      
+      --bg-page: #f4f6fa;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-input: #ffffff;
+      
+      --text-main: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      
+      --border-main: #e2e8f0;
+      --border-subtle: #edf2f7;
+      
+      --shadow-card: 0 4px 16px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+      --shadow-hover: 0 12px 28px -3px rgba(15, 23, 42, 0.1), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+      --shadow-dropdown: 0 14px 32px rgba(15, 23, 42, 0.14);
+
+      --line-solid: #64748b;
+      --line-matrix: #f59e0b;
+
+      --floating-bg: rgba(255, 255, 255, 0.92);
+      --floating-border: rgba(226, 232, 240, 0.95);
+      --floating-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      user-select: none;
+      transition: background-color 0.2s;
+    }
+
+    /* 頂部深色品牌沉穩標題欄 (加大字號與舒展大氣層級) */
+    .top-sys-header {
+      height: 56px;
+      padding: 0 24px;
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 30;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.45);
+    }
+
+    .brand-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .brand-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.4px;
+    }
+
+    .version-tag {
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(56, 189, 248, 0.18);
+      color: #38bdf8;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .brand-subtext {
+      font-size: 11.5px;
+      color: #94a3b8;
+      letter-spacing: 0.2px;
+    }
+
+    .user-profile-badge {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 12.5px;
+      color: #e2e8f0;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 4px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .user-avatar-mini {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #2563eb;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .user-role-pill {
+      font-size: 10px;
+      background: rgba(56, 189, 248, 0.2);
+      color: #38bdf8;
+      padding: 1px 6px;
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    /* 中心與部門導航欄 (底色飽滿、對比層次鮮明) */
+    .dept-tabs-nav-bar {
+      height: 46px;
+      padding: 0 20px;
+      background: #e2e8f0;
+      border-bottom: 1px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 10px;
+      z-index: 25;
+      overflow-x: auto;
+    }
+
+    /* 未選中標籤：填充純淨白卡片底色與細緻微陰影 */
+    .nav-tab-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      height: 30px;
+      padding: 0 13px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #334155;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+
+    .nav-tab-item:hover {
+      background: #f8fafc;
+      border-color: #94a3b8;
+      color: #0f172a;
+      transform: translateY(-1px);
+    }
+
+    /* 當前激活選中標籤：填充鮮明飽滿的皇家商務藍底色，白色文字，層次極高 */
+    .nav-tab-item.active {
+      background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+      color: #ffffff;
+      border: 1px solid #1d4ed8;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .nav-tab-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #3b82f6;
+      flex-shrink: 0;
+    }
+
+    .nav-tab-item.active .nav-tab-dot {
+      background: #93c5fd;
+      box-shadow: 0 0 4px #93c5fd;
+    }
+
+    .nav-tab-close {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      font-size: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #94a3b8;
+      opacity: 0.8;
+      margin-left: 2px;
+      transition: all 0.15s;
+    }
+
+    .nav-tab-item.active .nav-tab-close {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .nav-tab-close:hover {
+      background: #fee2e2;
+      color: #ef4444;
+      opacity: 1;
+    }
+
+    .nav-tab-item.active .nav-tab-close:hover {
+      background: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+
+    /* 「+ 新增架構」按鈕：中心位置添加時，填充精緻的天空淡藍微底色 */
+    .btn-create-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 30px;
+      padding: 0 13px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1d4ed8;
+      background: #eff6ff;
+      border: 1px dashed #3b82f6;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06);
+    }
+
+    .btn-create-tab:hover {
+      color: #1e40af;
+      border-color: #1d4ed8;
+      background: #dbeafe;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15);
+    }
+
+    /* 懸浮毛玻璃操作列 (Floating Action Bar) */
+    .floating-toolbar {
+      position: absolute;
+      top: 14px;
+      right: 20px;
+      background: var(--floating-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--floating-border);
+      border-radius: 8px;
+      padding: 4px 6px;
+      box-shadow: var(--floating-shadow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+      transition: all 0.2s ease;
+    }
+
+    .control-capsule {
+      display: inline-flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.04);
+      border: 1px solid var(--border-main);
+      border-radius: 5px;
+      padding: 1px;
+      gap: 1px;
+    }
+
+    .capsule-btn {
+      height: 24px;
+      padding: 0 8px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .capsule-btn.active {
+      background: var(--bg-card);
+      color: var(--brand-blue);
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+
+    .tool-btn {
+      height: 26px;
+      padding: 0 8px;
+      font-size: 11.5px;
+      font-weight: 500;
+      border: 1px solid var(--border-main);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      border-radius: 5px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s;
+      position: relative;
+    }
+
+    .tool-btn:hover {
+      background: var(--bg-subtle);
+      border-color: #cbd5e1;
+      color: var(--text-main);
+    }
+
+    .tool-btn-primary {
+      background: var(--brand-blue);
+      color: #ffffff;
+      border-color: var(--brand-blue);
+    }
+
+    .tool-btn-primary:hover {
+      background: var(--brand-blue-hover);
+      color: #ffffff;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-main);
+      border-radius: 8px;
+      box-shadow: var(--shadow-dropdown);
+      min-width: 170px;
+      display: none;
+      flex-direction: column;
+      padding: 4px;
+      z-index: 100;
+    }
+
+    .dropdown-menu.show {
+      display: flex;
+    }
+
+    .dropdown-item {
+      height: 28px;
+      padding: 0 10px;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-radius: 4px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      text-align: left;
+      width: 100%;
+    }
+
+    .dropdown-item:hover {
+      background: var(--brand-blue-light);
+      color: var(--brand-blue);
+    }
+
+    .dropdown-item.active {
+      font-weight: 700;
+      color: var(--brand-blue);
+      background: var(--brand-blue-light);
+    }
+
+    .dropdown-divider {
+      height: 1px;
+      background: var(--border-main);
+      margin: 3px 0;
+    }
+
+    /* 主工作畫布與背景 */
+    main {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+    }
+
+    #canvas-container {
+      flex: 1;
+      height: 100%;
+      position: relative;
+      cursor: grab;
+      transition: background-color 0.2s;
+    }
+
+    /* 多款獨立畫布底色定義 (米黃/純白/冷灰/青綠/深黑) */
+    #canvas-container.bg-ivory { background-color: #faf4e6 !important; }
+    #canvas-container.bg-white { background-color: #ffffff !important; }
+    #canvas-container.bg-slate { background-color: #f1f5f9 !important; }
+    #canvas-container.bg-teal  { background-color: #f0fdf4 !important; }
+    #canvas-container.bg-onyx  { background-color: #0b1120 !important; }
+
+    /* 底紋樣式獨立開關 */
+    #canvas-container.pattern-dots {
+      background-image: radial-gradient(#cbd5e1 0.75px, transparent 0.75px);
+      background-size: 24px 24px;
+    }
+    #canvas-container.bg-onyx.pattern-dots {
+      background-image: radial-gradient(#27354f 1px, transparent 1px);
+    }
+    #canvas-container.pattern-grid {
+      background-image: linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    #canvas-container.bg-onyx.pattern-grid {
+      background-image: linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+    }
+    #canvas-container.pattern-none {
+      background-image: none !important;
+    }
+
+    #canvas-container.panning {
+      cursor: grabbing;
+    }
+
+    #org-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .viewport-controls {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-main);
+      border-radius: 6px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      padding: 2px;
+      gap: 2px;
+      z-index: 10;
+    }
+
+    .icon-btn {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .icon-btn:hover {
+      background: var(--bg-subtle);
+      color: var(--brand-blue);
+    }
+
+    /* 組織卡片樣式 */
+    .node-card {
+      border-radius: 8px;
+      width: 100%;
+      height: 100%;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-card);
+      cursor: move;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      position: relative;
+      user-select: none;
+      overflow: hidden;
+      border: 1.5px solid #cbd5e1;
+      background: #ffffff;
+    }
+
+    .node-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .node-card.selected {
+      outline: 2px solid var(--brand-blue) !important;
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2) !important;
+    }
+
+    .node-card.dragging {
+      opacity: 0.92;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22) !important;
+      z-index: 999;
+    }
+
+    /* 8 套全卡色調 + 3 檔濃度體系 */
+    .card-theme-blue.intensity-light  { background: #f0f7ff !important; border-color: #bfdbfe !important; }
+    .card-theme-blue.intensity-normal { background: #dbeafe !important; border-color: #93c5fd !important; }
+    .card-theme-blue.intensity-vivid  { background: #bfdbfe !important; border-color: #60a5fa !important; }
+
+    .card-theme-emerald.intensity-light  { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+    .card-theme-emerald.intensity-normal { background: #dcfce7 !important; border-color: #86efac !important; }
+    .card-theme-emerald.intensity-vivid  { background: #bbf7d0 !important; border-color: #4ade80 !important; }
+
+    .card-theme-amber.intensity-light  { background: #fffbeb !important; border-color: #fde68a !important; }
+    .card-theme-amber.intensity-normal { background: #fef3c7 !important; border-color: #fcd34d !important; }
+    .card-theme-amber.intensity-vivid  { background: #fde68a !important; border-color: #fbbf24 !important; }
+
+    .card-theme-slate.intensity-light  { background: #f8fafc !important; border-color: #cbd5e1 !important; }
+    .card-theme-slate.intensity-normal { background: #f1f5f9 !important; border-color: #94a3b8 !important; }
+    .card-theme-slate.intensity-vivid  { background: #e2e8f0 !important; border-color: #64748b !important; }
+
+    .card-theme-purple.intensity-light  { background: #faf5ff !important; border-color: #e9d5ff !important; }
+    .card-theme-purple.intensity-normal { background: #f3e8ff !important; border-color: #d8b4fe !important; }
+    .card-theme-purple.intensity-vivid  { background: #e9d5ff !important; border-color: #c084fc !important; }
+
+    .card-theme-rose.intensity-light  { background: #fff1f2 !important; border-color: #fecdd3 !important; }
+    .card-theme-rose.intensity-normal { background: #ffe4e6 !important; border-color: #fda4af !important; }
+    .card-theme-rose.intensity-vivid  { background: #fecdd3 !important; border-color: #fb7185 !important; }
+
+    .card-theme-cyan.intensity-light  { background: #ecfeff !important; border-color: #a5f3fc !important; }
+    .card-theme-cyan.intensity-normal { background: #cffafe !important; border-color: #67e8f9 !important; }
+    .card-theme-cyan.intensity-vivid  { background: #a5f3fc !important; border-color: #22d3ee !important; }
+
+    .card-theme-white { background: #ffffff !important; border-color: #e2e8f0 !important; }
+
+    .node-card.status-hiring {
+      border: 1.5px dashed #f97316 !important;
+      background: #fffaf5 !important;
+    }
+
+    .node-card.status-contractor {
+      border: 1.5px solid #8b5cf6 !important;
+      background: #faf5ff !important;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .title-pill-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 120px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: var(--text-main);
+    }
+
+    .card-hover-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .node-card:hover .card-hover-actions {
+      opacity: 1;
+    }
+
+    .mini-svg-btn {
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border-radius: 3px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.85);
+      color: var(--text-muted);
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mini-svg-btn:hover {
+      background: var(--brand-blue);
+      color: #fff;
+      border-color: var(--brand-blue);
+    }
+
+    .mini-svg-btn.danger:hover {
+      background: #ef4444;
+      color: #fff;
+      border-color: #ef4444;
+    }
+
+    .card-user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .card-person-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .card-dept-text {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 5px;
+    }
+
+    .card-dept-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .card-duties-wrapper {
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 5px;
+      padding: 5px 7px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .card-duty-row {
+      font-size: 10.5px;
+      color: var(--text-secondary);
+      line-height: 1.35;
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+    }
+
+    .raci-pill {
+      font-size: 8.5px;
+      font-weight: 700;
+      padding: 0 3px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      line-height: 1.35;
+    }
+    .raci-pill.raci-A { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+    .raci-pill.raci-R { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+    .raci-pill.raci-C { background: #f3e8ff; color: #9333ea; border: 1px solid #e9d5ff; }
+    .raci-pill.raci-I { background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; }
+
+    /* ========================================================
+       可點選高亮連線與拖動調節手柄樣式
+       ======================================================== */
+    .link-group {
+      cursor: pointer;
+    }
+
+    .link-hit-area {
+      fill: none;
+      stroke: rgba(0, 0, 0, 0.001) !important;
+      stroke-width: 26px;
+      cursor: pointer;
+      pointer-events: stroke !important;
+    }
+
+    .link-hit-area:hover + .link-path {
+      stroke: #2563eb !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 5px rgba(37, 99, 235, 0.5));
+    }
+
+    .link-hit-area:hover + .link-matrix {
+      stroke: #d97706 !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 5px rgba(217, 119, 6, 0.5));
+    }
+
+    .link-path {
+      fill: none;
+      stroke: var(--line-solid);
+      stroke-linejoin: round;
+      stroke-linecap: round;
+      transition: stroke 0.15s, stroke-width 0.15s;
+      pointer-events: stroke !important;
+      cursor: pointer;
+    }
+
+    .link-path.selected-link {
+      stroke: #2563eb !important;
+      stroke-width: 3px !important;
+      filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.6));
+    }
+
+    .link-matrix {
+      fill: none;
+      stroke: var(--line-matrix);
+      stroke-width: 1.5;
+      stroke-dasharray: 4, 4;
+      stroke-linejoin: round;
+      transition: stroke 0.15s, stroke-width 0.15s;
+      pointer-events: stroke !important;
+      cursor: pointer;
+    }
+
+    .link-matrix.selected-link {
+      stroke: #d97706 !important;
+      stroke-width: 2.5px !important;
+      filter: drop-shadow(0 0 6px rgba(217, 119, 6, 0.6));
+    }
+
+    /* 連線 T 型拐點與避讓手柄 (可上下/左右拖拽調節距離) */
+    .link-split-handle, .link-matrix-handle {
+      cursor: pointer;
+      transition: transform 0.12s ease;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+    }
+
+    .link-split-handle {
+      cursor: ns-resize;
+    }
+
+    .link-matrix-handle {
+      cursor: ew-resize;
+    }
+
+    .link-split-handle:hover, .link-matrix-handle:hover {
+      transform: scale(1.3);
+    }
+
+    /* 自由文字便簽 */
+    .free-note-box {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px dashed #94a3b8;
+      border-radius: 6px;
+      padding: 6px 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      cursor: move;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 120px;
+      user-select: text;
+    }
+
+    .free-note-box:hover .note-del-btn {
+      opacity: 1;
+    }
+
+    .note-del-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #ef4444;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.15s;
+      border: none;
+    }
+
+    .note-textarea {
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 12px;
+      color: var(--text-main);
+      resize: none;
+      width: 100%;
+      line-height: 1.4;
+      font-family: inherit;
+    }
+
+    /* ========================================================
+       右側極簡緊湊收斂表單抽屜 (標籤左置、高信息密度)
+       ======================================================== */
+    #side-drawer {
+      width: 360px;
+      background: var(--bg-card);
+      border-left: 1px solid var(--border-main);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 24px rgba(15, 23, 42, 0.08);
+      z-index: 25;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    #side-drawer.hidden {
+      transform: translateX(100%);
+      margin-right: -360px;
+    }
+
+    .drawer-header {
+      height: 44px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--border-main);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+    }
+
+    .drawer-header-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .avatar-circle {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--brand-blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .drawer-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .drawer-title-text {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .drawer-subtitle-text {
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .drawer-body {
+      padding: 10px 14px;
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* 緊湊收斂區塊 (去臃腫) */
+    .form-compact-section {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-main);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .compact-section-header {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--brand-blue);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 4px;
+    }
+
+    /* 標籤左置單行緊湊排版 (左側嚴格對齊、統一左邊界) */
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-label {
+      width: 32px;
+      flex-shrink: 0;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-align: left;
+    }
+
+    .field-input, .field-select {
+      flex: 1;
+      height: 28px;
+      padding: 0 8px;
+      font-size: 12px;
+      border: 1px solid var(--border-main);
+      border-radius: 4px;
+      outline: none;
+      background: var(--bg-input);
+      color: var(--text-main);
+      transition: all 0.15s;
+    }
+
+    .field-input:focus, .field-select:focus {
+      border-color: var(--brand-blue);
+      box-shadow: 0 0 0 2px var(--brand-blue-light);
+    }
+
+    /* 左右雙欄一行雙字段 (與單行字段嚴格左對齊一線) */
+    .field-two-col {
+      display: flex;
+      gap: 10px;
+    }
+
+    .field-col {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .field-col-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      width: 32px;
+      text-align: left;
+    }
+
+    /* 色彩與濃度收斂到一行 */
+    .color-swatch-compact-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: nowrap;
+    }
+
+    .color-swatch-item {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+      transition: transform 0.1s;
+      flex-shrink: 0;
+    }
+
+    .color-swatch-item:hover {
+      transform: scale(1.2);
+    }
+
+    .color-swatch-item.active {
+      transform: scale(1.25);
+      outline: 2px solid var(--brand-blue);
+    }
+
+    .intensity-capsule {
+      display: inline-flex;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      padding: 1px;
+      margin-left: auto;
+      gap: 1px;
+    }
+
+    .intensity-btn {
+      font-size: 9.5px;
+      padding: 2px 6px;
+      border: none;
+      background: transparent;
+      border-radius: 3px;
+      cursor: pointer;
+      color: var(--text-muted);
+    }
+
+    .intensity-btn.active {
+      background: #ffffff;
+      color: var(--brand-blue);
+      font-weight: 700;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-row-action {
+      font-size: 10.5px;
+      color: var(--brand-blue);
+      background: #ffffff;
+      border: 1px solid var(--border-main);
+      border-radius: 4px;
+      padding: 3px 6px;
+      cursor: pointer;
+      flex: 1;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .btn-row-action:hover {
+      background: var(--brand-blue-light);
+      border-color: var(--brand-blue);
+    }
+
+    .duty-manage-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .duty-manage-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-main);
+      border-radius: 4px;
+      padding: 2px 4px 2px 6px;
+    }
+
+    .duty-manage-input {
+      flex: 1;
+      height: 24px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-main);
+      font-size: 11.5px;
+    }
+
+    .drawer-footer-actions {
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-main);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .footer-act-btn {
+      height: 28px;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border-main);
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .footer-act-btn:hover {
+      background: var(--brand-blue-light);
+      color: var(--brand-blue);
+      border-color: var(--brand-blue);
+    }
+
+    .footer-act-btn.highlight {
+      background: #ffedd5;
+      color: #ea580c;
+      border-color: #fed7aa;
+    }
+
+    .footer-act-btn.danger {
+      color: #ef4444;
+    }
+
+    .footer-act-btn.danger:hover {
+      background: #fee2e2;
+      border-color: #ef4444;
+    }
+
+    /* 畫布底色預覽按鈕 (自帶真實底色與直觀色點標註) */
+    .canvas-color-tile {
+      flex: 1;
+      height: 32px;
+      border-radius: 6px;
+      border: 1.5px solid var(--border-main);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+    .tile-swatch {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+    .canvas-color-tile.tile-ivory { background-color: #fef9c3 !important; color: #854d0e; border-color: #ca8a04; }
+    .canvas-color-tile.tile-white { background-color: #ffffff !important; color: #0f172a; border-color: #94a3b8; }
+    .canvas-color-tile.tile-slate { background-color: #e2e8f0 !important; color: #1e293b; border-color: #94a3b8; }
+    .canvas-color-tile.tile-teal  { background-color: #dcfce7 !important; color: #166534; border-color: #4ade80; }
+    .canvas-color-tile.tile-onyx  { background-color: #0f172a !important; color: #f8fafc; border-color: #334155; }
+
+    .canvas-color-tile:hover {
+      transform: translateY(-1.5px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.18);
+    }
+    .canvas-color-tile.active {
+      border-color: #2563eb !important;
+      box-shadow: 0 0 0 2px #2563eb, 0 3px 8px rgba(37, 99, 235, 0.35) !important;
+      font-weight: 800;
+    }
+
+    /* 卡片色系主題選項 (填滿各主題真實代表色與濃/中/淡色階，拒絕純白死板) */
+    .palette-theme-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 11px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      width: 100%;
+      position: relative;
+    }
+    .palette-theme-row.theme-classic {
+      background: linear-gradient(90deg, #eff6ff 0%, #dbeafe 100%) !important;
+      border: 1.5px solid #93c5fd !important;
+      color: #1e40af !important;
+    }
+    .palette-theme-row.theme-emerald {
+      background: linear-gradient(90deg, #f0fdf4 0%, #d1fae5 100%) !important;
+      border: 1.5px solid #86efac !important;
+      color: #065f46 !important;
+    }
+    .palette-theme-row.theme-warm {
+      background: linear-gradient(90deg, #fff7ed 0%, #ffedd5 100%) !important;
+      border: 1.5px solid #fdba74 !important;
+      color: #9a3412 !important;
+    }
+    .palette-theme-row.theme-purple {
+      background: linear-gradient(90deg, #faf5ff 0%, #ede9fe 100%) !important;
+      border: 1.5px solid #d8b4fe !important;
+      color: #5b21b6 !important;
+    }
+    .palette-theme-row.theme-slate {
+      background: linear-gradient(90deg, #f8fafc 0%, #e2e8f0 100%) !important;
+      border: 1.5px solid #cbd5e1 !important;
+      color: #334155 !important;
+    }
+
+    .palette-theme-row:hover {
+      transform: translateX(4px);
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+      filter: brightness(0.97);
+    }
+    .palette-theme-row.active {
+      box-shadow: 0 0 0 2px #2563eb, 0 3px 8px rgba(37, 99, 235, 0.3) !important;
+      border-color: #2563eb !important;
+      font-weight: 800;
+    }
+    .palette-theme-name {
+      font-size: 11.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .palette-indicator-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      display: inline-block;
+    }
+    .palette-swatch-bar {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 5px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.06);
+    }
+    .palette-swatch-chip {
+      width: 20px;
+      height: 14px;
+      border-radius: 2.5px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      display: inline-block;
+    }
+    .mini-choice-btn {
+      flex: 1;
+      height: 24px;
+      font-size: 11px;
+      border: 1px solid var(--border-main);
+      background: var(--bg-card);
+      color: var(--text-main);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.12s;
+      white-space: nowrap;
+      padding: 0 4px;
+    }
+    .mini-choice-btn:hover {
+      background: var(--brand-blue-light);
+      color: var(--brand-blue);
+      border-color: var(--brand-blue);
+    }
+    .mini-choice-btn.active {
+      background: var(--brand-blue);
+      color: #ffffff;
+      border-color: var(--brand-blue);
+      font-weight: 600;
+    }
+
+    /* 批次彈窗 */
+    .batch-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .batch-modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-main);
+      border-radius: 8px;
+      width: 440px;
+      padding: 16px;
+      box-shadow: var(--shadow-dropdown);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .batch-textarea {
+      height: 130px;
+      padding: 8px;
+      border: 1px solid var(--border-main);
+      border-radius: 5px;
+      background: var(--bg-input);
+      color: var(--text-main);
+      font-size: 12.5px;
+      outline: none;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    .batch-textarea:focus {
+      border-color: var(--brand-blue);
+    }
+
+    @media print {
+      .top-sys-header, .dept-tabs-nav-bar, .floating-toolbar, .viewport-controls, #side-drawer, .card-hover-actions, .note-del-btn, .link-split-handle {
+        display: none !important;
+      }
+      body, main, #canvas-container {
+        height: auto !important;
+        overflow: visible !important;
+        background: #ffffff !important;
+      }
+      #org-svg {
+        width: 100% !important;
+        height: auto !important;
+      }
+    }
+  
+    /* 系統輕量即時操作反饋 Toast */
+    .system-toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(24px);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(8px);
+      color: #ffffff;
+      padding: 9px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 99999;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .system-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- 頂部深色品牌沉穩標題欄 -->
+  <header class="top-sys-header">
+    <div class="brand-section">
+      <div class="brand-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="brand-text-group">
+        <div class="brand-title-row">
+          <span class="brand-title">組織架構管理系統</span>
+          <span class="version-tag">v2.2.0</span>
+        </div>
+        <span class="brand-subtext">Enterprise Organization Architecture Suite</span>
+      </div>
+    </div>
+
+    <div class="user-profile-badge">
+      <div class="user-avatar-mini">李</div>
+      <span>李格寧</span>
+      <span class="user-role-pill">系統管理員</span>
+    </div>
+  </header>
+
+  <!-- 中心與部門導航欄 -->
+  <nav class="dept-tabs-nav-bar" id="project-tabs-nav">
+    <button class="btn-create-tab" id="btn-add-project" onclick="addNewProject()" title="新增架構">+ 新增架構</button>
+  </nav>
+
+  <!-- 工作區主畫布 -->
+  <main>
+    <div id="canvas-container" class="bg-slate pattern-dots">
+      <svg id="org-svg">
+        <g id="viewport-group">
+          <g id="matrix-links-layer"></g>
+          <g id="links-layer"></g>
+          <g id="handles-layer"></g>
+          <g id="notes-layer"></g>
+          <g id="nodes-layer"></g>
+        </g>
+      </svg>
+
+      <!-- 懸浮毛玻璃工具欄 (Floating Action Bar) -->
+      <div class="floating-toolbar">
+        <!-- 排版方向 -->
+        <div class="control-capsule">
+          <button class="capsule-btn active" id="btn-layout-vert" onclick="setOrientation('vertical')">⬇️ 縱向</button>
+          <button class="capsule-btn" id="btn-layout-horiz" onclick="setOrientation('horizontal')">➡️ 橫向</button>
+        </div>
+
+        <!-- 職責檢視 -->
+        <div class="control-capsule">
+          <button class="capsule-btn" id="btn-mode-simple" onclick="setDutyView(false)">📋 精簡</button>
+          <button class="capsule-btn active" id="btn-mode-detail" onclick="setDutyView(true)">👁️ 職責</button>
+        </div>
+
+        <!-- 外觀與風格設置 (底色、線型、卡片風格解耦設置) -->
+        <div style="position: relative;">
+          <button class="tool-btn" onclick="toggleDropdown('appearance-dropdown')" title="自訂畫布底色、連線線型與卡片配色風格">
+            <span id="appearance-btn-label">🎨 外觀風格</span> ▾
+          </button>
+          <div class="dropdown-menu" id="appearance-dropdown" style="min-width: 285px; padding: 12px 14px;">
+            <!-- 1. 畫布底色 (解耦自選，直觀展示真實底色) -->
+            <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">📜 畫布底色 (獨立設置)</div>
+            <div style="display: flex; gap: 5px; margin-bottom: 8px;">
+              <button class="canvas-color-tile tile-ivory" onclick="setCanvasBg('ivory', '📜 護眼米黃')" title="護眼米黃 (羊皮紙質感)">
+                <span class="tile-swatch" style="background: #fef08a; border: 1.5px solid #d97706;"></span>
+                <span>米黃</span>
+              </button>
+              <button class="canvas-color-tile tile-white" onclick="setCanvasBg('white', '⚪ 純淨純白')" title="純淨純白 (經典打印感)">
+                <span class="tile-swatch" style="background: #ffffff; border: 1.5px solid #94a3b8;"></span>
+                <span>純白</span>
+              </button>
+              <button class="canvas-color-tile tile-slate" onclick="setCanvasBg('slate', '🧊 現代冷灰')" title="現代冷灰 (沉穩科技感)">
+                <span class="tile-swatch" style="background: #cbd5e1; border: 1.5px solid #64748b;"></span>
+                <span>冷灰</span>
+              </button>
+              <button class="canvas-color-tile tile-teal" onclick="setCanvasBg('teal', '🍃 淡雅清新')" title="淡雅清新 (柔和青綠)">
+                <span class="tile-swatch" style="background: #86efac; border: 1.5px solid #16a34a;"></span>
+                <span>青綠</span>
+              </button>
+              <button class="canvas-color-tile tile-onyx" onclick="setCanvasBg('onyx', '🌙 深空暗黑')" title="深空暗黑 (極客黑)">
+                <span class="tile-swatch" style="background: #020617; border: 1.5px solid #64748b;"></span>
+                <span>暗黑</span>
+              </button>
+            </div>
+            <!-- 底紋圖案 -->
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+              <button class="mini-choice-btn" id="pat-btn-dots" onclick="setCanvasPattern('dots')">微點陣</button>
+              <button class="mini-choice-btn" id="pat-btn-grid" onclick="setCanvasPattern('grid')">工程網格</button>
+              <button class="mini-choice-btn" id="pat-btn-none" onclick="setCanvasPattern('none')">純色無紋</button>
+            </div>
+            
+            <div class="dropdown-divider"></div>
+
+            <!-- 2. 全域連線線型 (獨立設置) -->
+            <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 700; margin-bottom: 6px;">📐 全域連線線型與粗細</div>
+            <div style="display: flex; gap: 5px; margin-bottom: 6px;">
+              <button class="mini-choice-btn" id="style-btn-ortho" onclick="setLinkStyle('orthogonal', '📐 正交折線')">📐 正交折線</button>
+              <button class="mini-choice-btn" id="style-btn-curve" onclick="setLinkStyle('curve', '〰️ 圓弧曲線')">〰️ 圓弧曲線</button>
+              <button class="mini-choice-btn" id="style-btn-straight" onclick="setLinkStyle('straight', '📏 直線連接')">📏 直線</button>
+            </div>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+              <button class="mini-choice-btn" id="width-btn-1" onclick="setLineWidth(1)">細線 1.0px</button>
+              <button class="mini-choice-btn" id="width-btn-15" onclick="setLineWidth(1.5)">標準 1.5px</button>
+              <button class="mini-choice-btn" id="width-btn-25" onclick="setLineWidth(2.5)">加粗 2.5px</button>
+            </div>
+
+            <div class="dropdown-divider"></div>
+
+            <!-- 3. 卡片色系主題預設 (彩色填充主題背景，濃·中·淡直觀可見) -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span style="font-size: 10.5px; color: var(--text-muted); font-weight: 700;">🎨 卡片色系主題 (一鍵換色)</span>
+              <span style="font-size: 9.5px; color: var(--text-muted); font-weight: 600;">高層濃 · 中層標 · 基層淡</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <button class="palette-theme-row theme-classic" onclick="setGlobalCardPalette('classic')" title="經典商務藍系：高層深藍、主管皇室藍、基層淡藍">
+                <span class="palette-theme-name">
+                  <span class="palette-indicator-dot" style="background: #2563eb;"></span>
+                  <span>經典商務藍系</span>
+                </span>
+                <div class="palette-swatch-bar">
+                  <span class="palette-swatch-chip" style="background: #1d4ed8;" title="高層濃色 (#1D4ED8)"></span>
+                  <span class="palette-swatch-chip" style="background: #3b82f6;" title="中層標準 (#3B82F6)"></span>
+                  <span class="palette-swatch-chip" style="background: #bfdbfe;" title="基層淡色 (#BFDBFE)"></span>
+                </div>
+              </button>
+              <button class="palette-theme-row theme-emerald" onclick="setGlobalCardPalette('emerald')" title="翡翠生機綠系：高層墨綠、主管翡翠綠、基層薄荷綠">
+                <span class="palette-theme-name">
+                  <span class="palette-indicator-dot" style="background: #059669;"></span>
+                  <span>翡翠生機綠系</span>
+                </span>
+                <div class="palette-swatch-bar">
+                  <span class="palette-swatch-chip" style="background: #047857;" title="高層濃色 (#047857)"></span>
+                  <span class="palette-swatch-chip" style="background: #10b981;" title="中層標準 (#10B981)"></span>
+                  <span class="palette-swatch-chip" style="background: #bbf7d0;" title="基層淡色 (#BBF7D0)"></span>
+                </div>
+              </button>
+              <button class="palette-theme-row theme-warm" onclick="setGlobalCardPalette('warm')" title="活力暖陽橙系：高層赤褐、主管活力橙、基層杏仁橙">
+                <span class="palette-theme-name">
+                  <span class="palette-indicator-dot" style="background: #d97706;"></span>
+                  <span>活力暖陽橙系</span>
+                </span>
+                <div class="palette-swatch-bar">
+                  <span class="palette-swatch-chip" style="background: #c2410c;" title="高層濃色 (#C2410C)"></span>
+                  <span class="palette-swatch-chip" style="background: #f97316;" title="中層標準 (#F97316)"></span>
+                  <span class="palette-swatch-chip" style="background: #fed7aa;" title="基層淡色 (#FED7AA)"></span>
+                </div>
+              </button>
+              <button class="palette-theme-row theme-purple" onclick="setGlobalCardPalette('purple')" title="科技深邃紫系：高層暗紫、主管科技紫、基層淡丁香">
+                <span class="palette-theme-name">
+                  <span class="palette-indicator-dot" style="background: #7c3aed;"></span>
+                  <span>科技深邃紫系</span>
+                </span>
+                <div class="palette-swatch-bar">
+                  <span class="palette-swatch-chip" style="background: #6d28d9;" title="高層濃色 (#6D28D9)"></span>
+                  <span class="palette-swatch-chip" style="background: #8b5cf6;" title="中層標準 (#8B5CF6)"></span>
+                  <span class="palette-swatch-chip" style="background: #ddd6fe;" title="基層淡色 (#DDD6FE)"></span>
+                </div>
+              </button>
+              <button class="palette-theme-row theme-slate" onclick="setGlobalCardPalette('slate')" title="莫蘭迪典雅灰：高層深鉛灰、主管冷鋼灰、基層淡雲灰">
+                <span class="palette-theme-name">
+                  <span class="palette-indicator-dot" style="background: #475569;"></span>
+                  <span>莫蘭迪典雅灰</span>
+                </span>
+                <div class="palette-swatch-bar">
+                  <span class="palette-swatch-chip" style="background: #334155;" title="高層濃色 (#334155)"></span>
+                  <span class="palette-swatch-chip" style="background: #64748b;" title="中層標準 (#64748b)"></span>
+                  <span class="palette-swatch-chip" style="background: #e2e8f0;" title="基層淡色 (#E2E8F0)"></span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 插入自由文字便簽 -->
+        <button class="tool-btn" onclick="addNewNote()" title="在畫布任意位置插入文字說明便簽">
+          📝 插入說明
+        </button>
+
+        <!-- 自動對齊整理 -->
+        <button class="tool-btn" id="btn-auto-layout" title="將自由擺放的卡片自動對齊整理為標準樹狀排版">
+          ✨ 自動整理
+        </button>
+
+        <!-- 匯出選單 -->
+        <div style="position: relative;">
+          <button class="tool-btn tool-btn-primary" onclick="toggleDropdown('export-dropdown')">
+            📥 匯出 ▾
+          </button>
+          <div class="dropdown-menu" id="export-dropdown">
+            <button class="dropdown-item" onclick="exportImage()">🖼️ 匯出圖片 (PNG)</button>
+            <button class="dropdown-item" onclick="exportSvgFile()">📐 向量圖 (SVG)</button>
+            <button class="dropdown-item" onclick="window.print()">🖨️ 列印 / 轉PDF</button>
+          </div>
+        </div>
+
+        <!-- 檔案與備份 -->
+        <div style="position: relative;">
+          <button class="tool-btn" onclick="toggleDropdown('file-dropdown')">
+            ⚙️ 檔案 ▾
+          </button>
+          <div class="dropdown-menu" id="file-dropdown">
+            <button class="dropdown-item" onclick="exportJson()">💾 備份全量資料</button>
+            <label class="dropdown-item" style="cursor: pointer; margin-bottom: 0;">
+              📂 載入 JSON 資料
+              <input type="file" id="file-import" accept=".json" style="display: none;">
+            </label>
+            <button class="dropdown-item" onclick="resetDemo()">🔄 重置示範資料</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 視角控制器 -->
+      <div class="viewport-controls">
+        <button class="icon-btn" id="btn-zoom-in" title="放大">+</button>
+        <button class="icon-btn" id="btn-zoom-out" title="縮小">−</button>
+        <button class="icon-btn" id="btn-zoom-reset" title="重置居中">⛶</button>
+      </div>
+    </div>
+
+    <!-- 右側極簡緊湊屬性編輯抽屜 -->
+    <div id="side-drawer" class="hidden">
+      <div class="drawer-header" id="drawer-header-content">
+        <!-- 動態標題 -->
+      </div>
+      <div class="drawer-body" id="drawer-form-content"></div>
+      <div class="drawer-footer-actions" id="drawer-footer-actions"></div>
+    </div>
+  </main>
+
+  <!-- 批次貼上職責 Modal -->
+  <div class="batch-modal-overlay" id="batch-duty-modal" style="display: none;">
+    <div class="batch-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 13.5px; font-weight: 700;">⚡ 快速批次貼上職責</span>
+        <button class="icon-btn" onclick="closeBatchModal()" style="width: 20px; height: 20px;">✕</button>
+      </div>
+      <p style="font-size: 11px; color: var(--text-muted);">
+        支援從 Word / Excel / 筆記直接貼上多行職責，每行將自動轉換為一條工作職責：
+      </p>
+      <textarea class="batch-textarea" id="batch-textarea" placeholder="負責新部門整體戰略推進&#10;核心架構審定與技術突破&#10;梯隊建設與跨部門資源協調"></textarea>
+      <div style="display: flex; justify-content: flex-end; gap: 6px;">
+        <button class="tool-btn" onclick="closeBatchModal()">取消</button>
+        <button class="tool-btn tool-btn-primary" onclick="confirmBatchDuties()">套用職責</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 8 套自主可選高級全卡質彩色
+    const CARD_PALETTES = [
+      { id: 'blue', name: '商務藍', hex: '#2563eb' },
+      { id: 'emerald', name: '翡翠綠', hex: '#059669' },
+      { id: 'amber', name: '琥珀橙', hex: '#d97706' },
+      { id: 'slate', name: '青石灰', hex: '#475569' },
+      { id: 'purple', name: '典雅紫', hex: '#7c3aed' },
+      { id: 'rose', name: '珊瑚紅', hex: '#db2777' },
+      { id: 'cyan', name: '天青色', hex: '#0891b2' },
+      { id: 'white', name: '純淨白', hex: '#ffffff' }
+    ];
+
+    // 初始示範架構 (已預設採用直角折線 + 縱向樹 + 畫布底色解耦)
+    const initialProjects = [
+      {
+        id: "proj-1",
+        name: "創新研發中心",
+        canvasBg: "slate",
+        canvasPattern: "dots",
+        orientation: "vertical",
+        linkStyle: "orthogonal",
+        lineWidth: 1.5,
+        linkOverrides: {}, // 支援單根線條自訂屬性
+        splitOffsets: {},  // 支援單個主管下屬分叉高度自訂拖動調節
+        notes: [
+          {
+            id: "note-1",
+            text: "📌 組織備註：技術組與架構組本季度完成雙周架構聯席會機制",
+            x: 580,
+            y: 40
+          }
+        ],
+        root: {
+          id: "node-root-1",
+          name: "林總監",
+          title: "中心總經理",
+          department: "決策委員會",
+          status: "active",
+          colorTheme: "blue",
+          colorIntensity: "normal",
+          matrixManagerId: null,
+          responsibilities: [
+            { text: "統籌研發中心年度戰略目標與預算分配", raci: "A" },
+            { text: "技術委員會重大路線與組織裁決", raci: "A" },
+            { text: "跨事業部高層資源協同推進", raci: "R" }
+          ],
+          children: [
+            {
+              id: "node-rd-lead",
+              name: "陳副總",
+              title: "技術總監",
+              department: "研發組",
+              status: "active",
+              colorTheme: "emerald",
+              colorIntensity: "normal",
+              matrixManagerId: null,
+              responsibilities: [
+                { text: "主導核心微服務技術架構升級", raci: "A" },
+                { text: "研發規範與工程師梯隊建設", raci: "R" }
+              ],
+              children: [
+                {
+                  id: "node-fe-lead",
+                  name: "王組長",
+                  title: "前端負責人",
+                  department: "架構組",
+                  status: "active",
+                  colorTheme: "emerald",
+                  colorIntensity: "light",
+                  matrixManagerId: null,
+                  responsibilities: [
+                    { text: "前端微服務組件庫架構把控", raci: "A" },
+                    { text: "工程自動化構建推進", raci: "R" }
+                  ],
+                  children: [
+                    {
+                      id: "node-fe-dev",
+                      name: "李專員",
+                      title: "資深前端工程師",
+                      department: "架構組",
+                      status: "active",
+                      colorTheme: "emerald",
+                      colorIntensity: "light",
+                      matrixManagerId: null,
+                      responsibilities: [
+                        { text: "核心業務模組研發與交互交付", raci: "R" },
+                        { text: "前端介面效能調優", raci: "R" }
+                      ],
+                      children: []
+                    },
+                    {
+                      id: "node-fe-open",
+                      name: "待招聘 (HC-03)",
+                      title: "前端工程師",
+                      department: "架構組",
+                      status: "hiring",
+                      colorTheme: "amber",
+                      colorIntensity: "light",
+                      matrixManagerId: null,
+                      responsibilities: [
+                        { text: "新部門專案前端功能實作", raci: "R" }
+                      ],
+                      children: []
+                    }
+                  ]
+                },
+                {
+                  id: "node-be-lead",
+                  name: "張組長",
+                  title: "後端負責人",
+                  department: "研發組",
+                  status: "active",
+                  colorTheme: "emerald",
+                  colorIntensity: "light",
+                  matrixManagerId: null,
+                  responsibilities: [
+                    { text: "分散式交易中台設計與穩定性", raci: "A" },
+                    { text: "容災演練與資料安全防護", raci: "R" }
+                  ],
+                  children: []
+                }
+              ]
+            },
+            {
+              id: "node-pm-lead",
+              name: "黃主管",
+              title: "商業化產品總監",
+              department: "商業化",
+              status: "active",
+              colorTheme: "amber",
+              colorIntensity: "normal",
+              matrixManagerId: null,
+              responsibilities: [
+                { text: "新商業模式驗證與產品覆蓋矩陣", raci: "A" },
+                { text: "客戶回饋跟蹤與迭代複盤", raci: "R" }
+              ],
+              children: [
+                {
+                  id: "node-pm-adv",
+                  name: "周顧問",
+                  title: "商業戰略顧問",
+                  department: "商業化",
+                  status: "contractor",
+                  colorTheme: "purple",
+                  colorIntensity: "light",
+                  matrixManagerId: "node-rd-lead",
+                  responsibilities: [
+                    { text: "產業政策合規把控與諮詢", raci: "C" },
+                    { text: "重大戰略決策知會", raci: "I" }
+                  ],
+                  children: []
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        id: "proj-2",
+        name: "數字行銷子公司",
+        canvasBg: "ivory",
+        canvasPattern: "dots",
+        orientation: "vertical",
+        linkStyle: "orthogonal",
+        lineWidth: 1.5,
+        linkOverrides: {},
+        splitOffsets: {},
+        notes: [],
+        root: {
+          id: "node-sub-root",
+          name: "郭總裁",
+          title: "行銷子公司負責人",
+          department: "管理部",
+          status: "active",
+          colorTheme: "rose",
+          colorIntensity: "normal",
+          matrixManagerId: null,
+          responsibilities: [{ text: "全面負責海外品牌推廣與增長體系", raci: "A" }],
+          children: [
+            {
+              id: "node-mkt-1",
+              name: "劉經理",
+              title: "媒介增長經理",
+              department: "市場組",
+              status: "active",
+              colorTheme: "rose",
+              colorIntensity: "light",
+              matrixManagerId: null,
+              responsibilities: [
+                { text: "全通路投放預算與ROI把控", raci: "A" },
+                { text: "媒介管道商務談判", raci: "R" }
+              ],
+              children: []
+            }
+          ]
+        }
+      }
+    ];
+
+    function normalizeDuties(list) {
+      if (!list || !Array.isArray(list)) return [];
+      return list.map(item => {
+        if (typeof item === 'string') return { text: item, raci: 'R' };
+        return { text: item.text || '', raci: item.raci || 'R' };
+      });
+    }
+
+    // 全局狀態
+    let appProjects = [];
+    try {
+      const saved = localStorage.getItem('org_chart_projects');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].root) {
+          appProjects = parsed;
+        }
+      }
+    } catch (e) {}
+    if (!appProjects || appProjects.length === 0) {
+      appProjects = JSON.parse(JSON.stringify(initialProjects));
+    }
+    let activeProjectId = appProjects[0]?.id || "proj-1";
+    let selectedNodeId = null;
+    let selectedLinkId = null; // 當前選中的單根線條
+    let showResponsibilities = true;
+
+    // 視圖狀態
+    let zoom = 1;
+    let panX = 60;
+    let panY = 70;
+    let isPanning = false;
+    let startX = 0;
+    let startY = 0;
+
+    // 拖拽狀態
+    let activeDragItem = null;
+    let dragItemType = null; // 'node' | 'note' | 'handle'
+    let dragStartMouseX = 0;
+    let dragStartMouseY = 0;
+    let itemInitialX = 0;
+    let itemInitialY = 0;
+    let hasMoved = false;
+
+    // DOM 元素
+    const svg = document.getElementById('org-svg');
+    const viewportGroup = document.getElementById('viewport-group');
+    const linksLayer = document.getElementById('links-layer');
+    const matrixLinksLayer = document.getElementById('matrix-links-layer');
+    const handlesLayer = document.getElementById('handles-layer');
+    const notesLayer = document.getElementById('notes-layer');
+    const nodesLayer = document.getElementById('nodes-layer');
+    const canvasContainer = document.getElementById('canvas-container');
+    const sideDrawer = document.getElementById('side-drawer');
+    const drawerHeaderContent = document.getElementById('drawer-header-content');
+    const drawerFormContent = document.getElementById('drawer-form-content');
+    const drawerFooterActions = document.getElementById('drawer-footer-actions');
+    const projectTabsNav = document.getElementById('project-tabs-nav');
+
+    function getCurrentProject() {
+      let p = appProjects.find(item => item.id === activeProjectId);
+      if (!p) {
+        p = appProjects[0];
+        activeProjectId = p.id;
+      }
+      if (!p.notes) p.notes = [];
+      if (!p.linkStyle) p.linkStyle = "orthogonal";
+      if (!p.lineWidth) p.lineWidth = 1.5;
+      if (!p.linkOverrides) p.linkOverrides = {};
+      if (!p.splitOffsets) p.splitOffsets = {};
+      if (!p.canvasBg) p.canvasBg = "slate";
+      if (!p.canvasPattern) p.canvasPattern = "dots";
+      return p;
+    }
+
+    const CARD_W = 224;
+    function getCardH() {
+      return showResponsibilities ? 168 : 90;
+    }
+    const GAP_X = 46;
+    const GAP_Y = 68;
+
+    // 樹狀布局計算
+    function layoutTree(root, orientation = "vertical") {
+      const isVert = orientation === "vertical";
+      const cardW = CARD_W;
+      const cardH = getCardH();
+
+      function calcInitialPositions(node, depth = 0) {
+        node.depth = depth;
+
+        if (isVert) {
+          node.autoY = depth * (cardH + GAP_Y);
+        } else {
+          node.autoX = depth * (cardW + GAP_Y);
+        }
+
+        if (!node.children || node.children.length === 0) {
+          node.subTreeSpan = isVert ? cardW : cardH;
+          return;
+        }
+
+        let totalSpan = 0;
+        node.children.forEach((child, i) => {
+          calcInitialPositions(child, depth + 1);
+          totalSpan += child.subTreeSpan + (i > 0 ? GAP_X : 0);
+        });
+
+        node.subTreeSpan = Math.max(isVert ? cardW : cardH, totalSpan);
+      }
+
+      function assignPositions(node, offset) {
+        const selfSpan = isVert ? cardW : cardH;
+        const centerPos = offset + (node.subTreeSpan - selfSpan) / 2;
+
+        if (isVert) {
+          node.autoX = centerPos;
+        } else {
+          node.autoY = centerPos;
+        }
+
+        if (node.x === undefined || node.isAutoPlaced) {
+          node.x = node.autoX;
+          node.y = node.autoY;
+          node.isAutoPlaced = true;
+        }
+
+        if (!node.children || node.children.length === 0) return;
+
+        let curOffset = offset;
+        node.children.forEach(child => {
+          assignPositions(child, curOffset);
+          curOffset += child.subTreeSpan + GAP_X;
+        });
+      }
+
+      calcInitialPositions(root, 0);
+
+      const containerW = canvasContainer.clientWidth || 1000;
+      const containerH = canvasContainer.clientHeight || 700;
+
+      if (isVert) {
+        const rootLeft = Math.max(60, (containerW - root.subTreeSpan) / 2);
+        assignPositions(root, rootLeft);
+      } else {
+        const rootTop = Math.max(80, (containerH - root.subTreeSpan) / 2);
+        assignPositions(root, rootTop);
+      }
+    }
+
+    document.getElementById('btn-auto-layout').addEventListener('click', () => {
+      const proj = getCurrentProject();
+      function clearCustomPositions(node) {
+        node.isAutoPlaced = true;
+        delete node.x;
+        delete node.y;
+        if (node.children) node.children.forEach(clearCustomPositions);
+      }
+      clearCustomPositions(proj.root);
+      proj.splitOffsets = {}; // 重置所有手柄距離
+      render();
+    });
+
+    function flatten(root) {
+      const nodes = [];
+      const links = [];
+      const matrixLinks = [];
+
+      function traverse(parent, current) {
+        nodes.push(current);
+        if (parent) {
+          links.push({
+            id: `link-${parent.id}-${current.id}`,
+            source: parent,
+            target: current
+          });
+        }
+        if (current.children) {
+          current.children.forEach(child => traverse(current, child));
+        }
+      }
+
+      traverse(null, root);
+
+      nodes.forEach(target => {
+        if (target.matrixManagerId) {
+          const source = nodes.find(n => n.id === target.matrixManagerId);
+          if (source) {
+            matrixLinks.push({
+              id: `matrix-${source.id}-${target.id}`,
+              source,
+              target
+            });
+          }
+        }
+      });
+
+      return { nodes, links, matrixLinks };
+    }
+
+    // 計算連線路徑 (支援單根覆蓋 + 正交拐點距離自訂調節)
+    function computeSmartPath(s, t, globalStyle, override = {}, splitOffset = 0) {
+      const cardH = getCardH();
+      const proj = getCurrentProject();
+      const isVert = (proj.orientation || 'vertical') === 'vertical';
+      const style = override.style || globalStyle;
+
+      let sx, sy, tx, ty;
+
+      if (isVert) {
+        sx = s.x + CARD_W / 2;
+        sy = s.y + cardH;
+        tx = t.x + CARD_W / 2;
+        ty = t.y;
+
+        // 正交折線
+        if (style === 'orthogonal') {
+          // 加入用戶手柄拖動的 offset
+          let my = sy + (ty - sy) / 2 + splitOffset;
+          // 防止拉出上下卡片範圍
+          my = Math.max(sy + 8, Math.min(ty - 8, my));
+          return `M ${sx} ${sy} L ${sx} ${my} L ${tx} ${my} L ${tx} ${ty}`;
+        }
+        if (style === 'straight') {
+          return `M ${sx} ${sy} L ${tx} ${ty}`;
+        }
+        // 圓弧曲線
+        const my = sy + (ty - sy) / 2 + splitOffset;
+        return `M ${sx} ${sy} C ${sx} ${my}, ${tx} ${my}, ${tx} ${ty}`;
+      } else {
+        // 橫向樹
+        sx = s.x + CARD_W;
+        sy = s.y + cardH / 2;
+        tx = t.x;
+        ty = t.y + cardH / 2;
+
+        if (style === 'orthogonal') {
+          let mx = sx + (tx - sx) / 2 + splitOffset;
+          mx = Math.max(sx + 8, Math.min(tx - 8, mx));
+          return `M ${sx} ${sy} L ${mx} ${sy} L ${mx} ${ty} L ${tx} ${ty}`;
+        }
+        if (style === 'straight') {
+          return `M ${sx} ${sy} L ${tx} ${ty}`;
+        }
+        const mx = sx + (tx - sx) / 2 + splitOffset;
+        return `M ${sx} ${sy} C ${mx} ${sy}, ${mx} ${ty}, ${tx} ${ty}`;
+      }
+    }
+
+    // 全局渲染
+    function render() {
+      const proj = getCurrentProject();
+
+      // 套用解耦的畫布底色與底紋
+      canvasContainer.className = `bg-${proj.canvasBg || 'slate'} pattern-${proj.canvasPattern || 'dots'}`;
+
+      const isVert = (proj.orientation || 'vertical') === 'vertical';
+      document.getElementById('btn-layout-vert').classList.toggle('active', isVert);
+      document.getElementById('btn-layout-horiz').classList.toggle('active', !isVert);
+      document.getElementById('btn-mode-simple').classList.toggle('active', !showResponsibilities);
+      document.getElementById('btn-mode-detail').classList.toggle('active', showResponsibilities);
+
+      const linkStyle = proj.linkStyle || 'orthogonal';
+      const globalLineWidth = proj.lineWidth || 1.5;
+      const styleNameMap = {
+        'orthogonal': '📐 直角折線',
+        'curve': '〰️ 圓弧曲線',
+        'straight': '📏 直線連接'
+      };
+      const lbl = document.getElementById('link-style-label');
+      if (lbl) lbl.textContent = styleNameMap[linkStyle] || '📐 直角折線';
+
+      // 同步外觀面板中各按鈕高亮
+      document.querySelectorAll('#appearance-dropdown .mini-choice-btn').forEach(b => b.classList.remove('active'));
+      const orthoBtn = document.getElementById('style-btn-' + (linkStyle === 'orthogonal' ? 'ortho' : linkStyle));
+      if (orthoBtn) orthoBtn.classList.add('active');
+      const wBtn = document.getElementById('width-btn-' + String(globalLineWidth).replace('.', ''));
+      if (wBtn) wBtn.classList.add('active');
+      const patBtn = document.getElementById('pat-btn-' + (proj.canvasPattern || 'dots'));
+      if (patBtn) patBtn.classList.add('active');
+      document.querySelectorAll('#appearance-dropdown .canvas-color-tile').forEach(b => {
+        b.classList.toggle('active', b.classList.contains('tile-' + (proj.canvasBg || 'slate')));
+      });
+      document.querySelectorAll('#appearance-dropdown .palette-theme-row').forEach(b => {
+        b.classList.toggle('active', b.classList.contains('theme-' + (proj.cardPaletteTheme || 'classic')));
+      });
+
+      layoutTree(proj.root, proj.orientation || 'vertical');
+      const { nodes, links, matrixLinks } = flatten(proj.root);
+      const cardH = getCardH();
+
+      // 1. 繪製連線 (加厚感應區，點擊可選，支援單根自訂)
+      let linksHtml = '';
+      let handlesHtml = '';
+      const renderedTrunkHandles = new Set();
+
+      links.forEach(l => {
+        const override = (proj.linkOverrides || {})[l.id] || {};
+        const splitOffset = (proj.splitOffsets || {})[l.source.id] || 0;
+        const d = computeSmartPath(l.source, l.target, linkStyle, override, splitOffset);
+        const isSelected = selectedLinkId === l.id;
+        const strokeW = override.width || globalLineWidth;
+        const strokeColor = override.color || (isSelected ? '#2563eb' : 'var(--line-solid)');
+        const isDashed = override.dashed;
+
+        linksHtml += `
+          <g class="link-group" data-link-id="${l.id}">
+            <path d="${d}" class="link-hit-area" data-link-id="${l.id}" />
+            <path d="${d}" class="link-path ${isSelected ? 'selected-link' : ''}" 
+                  id="${l.id}" 
+                  data-link-id="${l.id}"
+                  style="stroke-width: ${strokeW}px; stroke: ${strokeColor}; ${isDashed ? 'stroke-dasharray: 4,4;' : ''}" />
+          </g>
+        `;
+
+        // 如果是直角正交折線，在 T 型橫桿中點放置可拖拽手柄
+        const curStyle = override.style || linkStyle;
+        if (curStyle === 'orthogonal') {
+          let hx, hy;
+          if (isVert) {
+            let my = l.source.y + cardH + (l.target.y - (l.source.y + cardH)) / 2 + splitOffset;
+            hy = Math.max(l.source.y + cardH + 8, Math.min(l.target.y - 8, my));
+            hx = isSelected ? (l.source.x + CARD_W / 2 + l.target.x + CARD_W / 2) / 2 : (l.source.x + CARD_W / 2);
+          } else {
+            let mx = l.source.x + CARD_W + (l.target.x - (l.source.x + CARD_W)) / 2 + splitOffset;
+            hx = Math.max(l.source.x + CARD_W + 8, Math.min(l.target.x - 8, mx));
+            hy = isSelected ? (l.source.y + cardH / 2 + l.target.y + cardH / 2) / 2 : (l.source.y + cardH / 2);
+          }
+
+          if (isSelected || !renderedTrunkHandles.has(l.source.id)) {
+            renderedTrunkHandles.add(l.source.id);
+            handlesHtml += `
+              <g class="link-split-handle" data-source-id="${l.source.id}" data-link-id="${l.id}" transform="translate(${hx}, ${hy})" title="按住上下拖動可自由調節分支折線高度">
+                <circle r="7.5" fill="#2563eb" stroke="#ffffff" stroke-width="2" />
+                <text text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-size="8.5" font-weight="bold">↕</text>
+              </g>
+            `;
+          }
+        }
+      });
+      linksLayer.innerHTML = linksHtml;
+
+      // 2. 繪製矩陣虛線 (支援點選與自訂樣式，不與實線打架)
+      let matrixHtml = '';
+      matrixLinks.forEach(l => {
+        const override = (proj.linkOverrides || {})[l.id] || {};
+        const isSelected = selectedLinkId === l.id;
+        const strokeW = override.width || globalLineWidth;
+        const curStyle = override.style || (linkStyle === 'curve' ? 'curve' : 'curve');
+        const matrixOffset = override.splitOffset !== undefined ? override.splitOffset : 35;
+
+        const sx = l.source.x + CARD_W / 2;
+        const sy = l.source.y + cardH / 2;
+        const tx = l.target.x + CARD_W / 2;
+        const ty = l.target.y + cardH / 2;
+        const hx = (sx + tx) / 2 + matrixOffset;
+        const hy = (sy + ty) / 2;
+
+        let pathData;
+        if (curStyle === 'curve') {
+          pathData = `M ${sx} ${sy} Q ${hx} ${hy - 35}, ${tx} ${ty}`;
+        } else if (curStyle === 'straight') {
+          pathData = `M ${sx} ${sy} L ${tx} ${ty}`;
+        } else {
+          pathData = `M ${sx} ${sy} L ${hx} ${sy} L ${hx} ${ty} L ${tx} ${ty}`;
+        }
+
+        matrixHtml += `
+          <g class="link-group" data-link-id="${l.id}">
+            <path d="${pathData}" class="link-hit-area" data-link-id="${l.id}" />
+            <path d="${pathData}" class="link-matrix ${isSelected ? 'selected-link' : ''}" 
+                  id="${l.id}" 
+                  data-link-id="${l.id}"
+                  style="stroke-width: ${strokeW}px; ${override.color ? `stroke: ${override.color};` : ''}" />
+          </g>
+        `;
+
+        // 矩陣虛線被選中時，在中段顯示避讓調節手柄
+        if (isSelected) {
+          handlesHtml += `
+            <g class="link-matrix-handle" data-link-id="${l.id}" transform="translate(${hx}, ${curStyle === 'curve' ? hy - 18 : hy})" title="按住左右拖動可自由調整避讓位置，避免重疊">
+              <circle r="7.5" fill="#d97706" stroke="#ffffff" stroke-width="2" />
+              <text text-anchor="middle" dominant-baseline="central" fill="#ffffff" font-size="8.5" font-weight="bold">↔</text>
+            </g>
+          `;
+        }
+      });
+      matrixLinksLayer.innerHTML = matrixHtml;
+      handlesLayer.innerHTML = handlesHtml;
+
+      // 3. 繪製自由文字便簽
+      let notesHtml = '';
+      (proj.notes || []).forEach(note => {
+        notesHtml += `
+          <foreignObject x="${note.x}" y="${note.y}" width="220" height="80" id="fo-note-${note.id}">
+            <div class="free-note-box" data-note-id="${note.id}">
+              <button class="note-del-btn" onclick="deleteNote('${note.id}')" title="刪除此文字說明">✕</button>
+              <textarea class="note-textarea" 
+                        placeholder="在此輸入說明文字..." 
+                        oninput="updateNoteText('${note.id}', this.value)">${escapeHtml(note.text || '')}</textarea>
+            </div>
+          </foreignObject>
+        `;
+      });
+      notesLayer.innerHTML = notesHtml;
+
+      // 4. 節點卡片
+      let nodesHtml = '';
+      nodes.forEach(n => {
+        const isSelected = n.id === selectedNodeId;
+        const status = n.status || 'active';
+        const colorKey = n.colorTheme || 'blue';
+        const intensity = n.colorIntensity || 'normal';
+        const duties = normalizeDuties(n.responsibilities);
+
+        let dutiesHtml = '';
+        if (showResponsibilities) {
+          const list = duties.length > 0 ? duties : [{ text: '未設定核心職責事項', raci: 'R' }];
+          dutiesHtml = `
+            <div class="card-duties-wrapper">
+              ${list.map(d => `
+                <div class="card-duty-row">
+                  <span class="raci-pill raci-${d.raci}">${d.raci}</span>
+                  <span>${escapeHtml(d.text)}</span>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+
+        let statusTag = '';
+        if (status === 'hiring') {
+          statusTag = `<span style="font-size: 9.5px; background: #ffedd5; color: #ea580c; padding: 1px 4px; border-radius: 3px; font-weight: 700;">招募中</span>`;
+        } else if (status === 'contractor') {
+          statusTag = `<span style="font-size: 9.5px; background: #ede9fe; color: #7c3aed; padding: 1px 4px; border-radius: 3px; font-weight: 700;">外聘</span>`;
+        }
+
+        const cardClass = `card-theme-${colorKey} intensity-${intensity}`;
+
+        nodesHtml += `
+          <foreignObject x="${n.x}" y="${n.y}" width="${CARD_W}" height="${cardH}" id="fo-${n.id}">
+            <div class="node-card ${cardClass} status-${status} ${isSelected ? 'selected' : ''}" data-id="${n.id}">
+              <div class="card-header-row">
+                <span class="title-pill-tag">
+                  ${escapeHtml(n.title || '職位待定')}
+                </span>
+                ${statusTag}
+                <div class="card-hover-actions" onclick="event.stopPropagation()">
+                  <button class="mini-svg-btn" onclick="addSingleChild('${n.id}')" title="加一層下級">+</button>
+                  <button class="mini-svg-btn" onclick="addTwoLevels('${n.id}')" title="一鍵加兩層">+2</button>
+                  <button class="mini-svg-btn" onclick="addSibling('${n.id}')" title="加同級同事">═</button>
+                  ${n.id !== proj.root.id ? `<button class="mini-svg-btn danger" onclick="removeNode('${n.id}')" title="刪除">✕</button>` : ''}
+                </div>
+              </div>
+
+              <div class="card-user-row">
+                <div class="card-person-name">${escapeHtml(n.name || '姓名待填')}</div>
+              </div>
+
+              <div class="card-dept-text">
+                <span class="card-dept-dot" style="background-color: var(--brand-blue);"></span>
+                <span>${escapeHtml(n.department || '未分配部門')}</span>
+              </div>
+
+              ${dutiesHtml}
+            </div>
+          </foreignObject>
+        `;
+      });
+      nodesLayer.innerHTML = nodesHtml;
+
+      attachInteractionEvents();
+      renderProjectTabs();
+      updateTransform();
+      saveData();
+    }
+
+    // 交互事件綁定 (卡片、便簽、手柄)
+    function attachInteractionEvents() {
+      const proj = getCurrentProject();
+
+      // 卡片拖動
+      document.querySelectorAll('.node-card').forEach(card => {
+        const id = card.getAttribute('data-id');
+        card.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.mini-svg-btn')) return;
+
+          activeDragItem = findNodeById(proj.root, id);
+          if (!activeDragItem) return;
+          dragItemType = 'node';
+
+          dragStartMouseX = e.clientX;
+          dragStartMouseY = e.clientY;
+          itemInitialX = activeDragItem.x;
+          itemInitialY = activeDragItem.y;
+          hasMoved = false;
+
+          card.classList.add('dragging');
+          e.stopPropagation();
+        });
+      });
+
+      // 便簽拖動
+      document.querySelectorAll('.free-note-box').forEach(noteBox => {
+        const noteId = noteBox.getAttribute('data-note-id');
+        noteBox.addEventListener('mousedown', (e) => {
+          if (e.target.closest('.note-textarea') || e.target.closest('.note-del-btn')) return;
+
+          activeDragItem = (proj.notes || []).find(n => n.id === noteId);
+          if (!activeDragItem) return;
+          dragItemType = 'note';
+
+          dragStartMouseX = e.clientX;
+          dragStartMouseY = e.clientY;
+          itemInitialX = activeDragItem.x;
+          itemInitialY = activeDragItem.y;
+          hasMoved = false;
+
+          e.stopPropagation();
+        });
+      });
+
+      // 連線群組直接綁定點擊事件 (確保 100% 靈敏點選，不被畫布平移攔截)
+      document.querySelectorAll('.link-group').forEach(lg => {
+        const linkId = lg.getAttribute('data-link-id');
+        lg.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectLink(linkId);
+        });
+        lg.addEventListener('mousedown', (e) => {
+          e.stopPropagation();
+        });
+      });
+
+      // 正交折線分叉橫桿高度手柄
+      document.querySelectorAll('.link-split-handle').forEach(handle => {
+        const sourceId = handle.getAttribute('data-source-id');
+        const linkId = handle.getAttribute('data-link-id');
+        handle.addEventListener('mousedown', (e) => {
+          activeDragItem = { sourceId, linkId };
+          dragItemType = 'handle';
+
+          dragStartMouseX = e.clientX;
+          dragStartMouseY = e.clientY;
+          itemInitialY = (proj.splitOffsets || {})[sourceId] || 0;
+          itemInitialX = (proj.splitOffsets || {})[sourceId] || 0;
+          hasMoved = false;
+
+          e.stopPropagation();
+        });
+      });
+
+      // 矩陣虛線避讓位置手柄
+      document.querySelectorAll('.link-matrix-handle').forEach(handle => {
+        const linkId = handle.getAttribute('data-link-id');
+        handle.addEventListener('mousedown', (e) => {
+          activeDragItem = { linkId };
+          dragItemType = 'matrix-handle';
+
+          dragStartMouseX = e.clientX;
+          dragStartMouseY = e.clientY;
+          const override = (proj.linkOverrides || {})[linkId] || {};
+          itemInitialX = override.splitOffset !== undefined ? override.splitOffset : 35;
+          hasMoved = false;
+
+          e.stopPropagation();
+        });
+      });
+    }
+
+    window.addEventListener('mousemove', (e) => {
+      if (!activeDragItem) return;
+
+      const dx = (e.clientX - dragStartMouseX) / zoom;
+      const dy = (e.clientY - dragStartMouseY) / zoom;
+
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+        hasMoved = true;
+      }
+
+      if (dragItemType === 'node') {
+        activeDragItem.x = Math.round(itemInitialX + dx);
+        activeDragItem.y = Math.round(itemInitialY + dy);
+        activeDragItem.isAutoPlaced = false;
+
+        const fo = document.getElementById(`fo-${activeDragItem.id}`);
+        if (fo) {
+          fo.setAttribute('x', activeDragItem.x);
+          fo.setAttribute('y', activeDragItem.y);
+        }
+        render();
+      } else if (dragItemType === 'note') {
+        activeDragItem.x = Math.round(itemInitialX + dx);
+        activeDragItem.y = Math.round(itemInitialY + dy);
+
+        const fo = document.getElementById(`fo-note-${activeDragItem.id}`);
+        if (fo) {
+          fo.setAttribute('x', activeDragItem.x);
+          fo.setAttribute('y', activeDragItem.y);
+        }
+      } else if (dragItemType === 'handle') {
+        // 調節拐點高度距離
+        const proj = getCurrentProject();
+        const isVert = (proj.orientation || 'vertical') === 'vertical';
+        const delta = isVert ? dy : dx;
+        const newOffset = Math.round(itemInitialY + delta);
+
+        if (!proj.splitOffsets) proj.splitOffsets = {};
+        proj.splitOffsets[activeDragItem.sourceId] = newOffset;
+        render();
+
+        // 同步更新右側抽屜的滑塊數值
+        const slider = document.getElementById('link-offset-slider');
+        const numLabel = document.getElementById('link-offset-val');
+        if (slider) slider.value = newOffset;
+        if (numLabel) numLabel.textContent = `${newOffset > 0 ? '+' : ''}${newOffset}px`;
+      } else if (dragItemType === 'matrix-handle') {
+        // 調節矩陣虛線避讓偏置
+        const proj = getCurrentProject();
+        if (!proj.linkOverrides) proj.linkOverrides = {};
+        if (!proj.linkOverrides[activeDragItem.linkId]) proj.linkOverrides[activeDragItem.linkId] = {};
+        const newOffset = Math.round(itemInitialX + dx);
+        proj.linkOverrides[activeDragItem.linkId].splitOffset = newOffset;
+        render();
+
+        // 同步更新右側抽屜的滑塊數值
+        const slider = document.getElementById('matrix-offset-slider');
+        const numLabel = document.getElementById('matrix-offset-val');
+        if (slider) slider.value = newOffset;
+        if (numLabel) numLabel.textContent = `${newOffset}px`;
+      }
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (!activeDragItem) return;
+
+      if (dragItemType === 'node') {
+        const card = document.querySelector(`.node-card[data-id="${activeDragItem.id}"]`);
+        if (card) card.classList.remove('dragging');
+        if (!hasMoved) {
+          selectNode(activeDragItem.id);
+        } else {
+          saveData();
+        }
+      } else {
+        saveData();
+      }
+
+      activeDragItem = null;
+      dragItemType = null;
+    });
+
+    // ========================================================
+    // 單根連線點選與獨立屬性抽屜
+    // ========================================================
+    window.selectLink = function(linkId, e) {
+      if (e) e.stopPropagation();
+      selectedLinkId = linkId;
+      selectedNodeId = null;
+
+      render();
+      openLinkDrawer(linkId);
+    };
+
+    function openLinkDrawer(linkId) {
+      sideDrawer.classList.remove('hidden');
+
+      const proj = getCurrentProject();
+      if (!proj.linkOverrides) proj.linkOverrides = {};
+      const override = proj.linkOverrides[linkId] || {};
+      const isMatrix = linkId.startsWith('matrix-');
+
+      // 提取起點與終點節點名稱
+      const cleanId = linkId.replace('matrix-', '').replace('link-', '');
+      const parts = cleanId.split('-');
+      const sId = parts[0];
+      const tId = parts[1];
+      const sNode = findNodeById(proj.root, sId);
+      const tNode = findNodeById(proj.root, tId);
+      const sName = sNode ? (sNode.name || sNode.title) : '主管';
+      const tName = tNode ? (tNode.name || tNode.title) : '成員';
+
+      drawerHeaderContent.innerHTML = `
+        <div class="drawer-header-left">
+          <span style="font-size: 15px;">${isMatrix ? '🔸' : '📐'}</span>
+          <div class="drawer-title-group">
+            <span class="drawer-title-text">${isMatrix ? '協同虛線設定' : '直屬實線設定'}</span>
+            <span class="drawer-subtitle-text">${escapeHtml(sName)} ➔ ${escapeHtml(tName)}</span>
+          </div>
+        </div>
+        <button class="icon-btn" onclick="closeDrawer()" style="width: 20px; height: 20px;">✕</button>
+      `;
+
+      const currentStyle = override.style || (isMatrix ? 'curve' : proj.linkStyle || 'orthogonal');
+      const currentWidth = override.width || proj.lineWidth || 1.5;
+      const currentColor = override.color || '';
+      const isDashed = override.dashed !== undefined ? override.dashed : isMatrix;
+      const splitOffset = (proj.splitOffsets || {})[sId] || 0;
+      const matrixOffset = override.splitOffset !== undefined ? override.splitOffset : 35;
+
+      drawerFormContent.innerHTML = `
+        <div class="form-compact-section">
+          <!-- 線條形態 (實線/虛線) -->
+          <div class="field-row">
+            <span class="field-label">型態</span>
+            <select class="field-select" onchange="updateSingleLink('${linkId}', 'dashed', this.value === 'true')">
+              <option value="false" ${!isDashed ? 'selected' : ''}>—— 實線</option>
+              <option value="true" ${isDashed ? 'selected' : ''}>- - - 虛線</option>
+            </select>
+          </div>
+
+          <!-- 線條形狀 -->
+          <div class="field-row">
+            <span class="field-label">形狀</span>
+            <select class="field-select" onchange="updateSingleLink('${linkId}', 'style', this.value)">
+              <option value="orthogonal" ${currentStyle === 'orthogonal' ? 'selected' : ''}>📐 橫平豎直 (正交折線)</option>
+              <option value="curve" ${currentStyle === 'curve' ? 'selected' : ''}>〰️ 平滑圓弧 (貝塞爾曲線)</option>
+              <option value="straight" ${currentStyle === 'straight' ? 'selected' : ''}>📏 直線連接</option>
+            </select>
+          </div>
+
+          <!-- 線條粗細 -->
+          <div class="field-row">
+            <span class="field-label">粗細</span>
+            <select class="field-select" onchange="updateSingleLink('${linkId}', 'width', parseFloat(this.value))">
+              <option value="1" ${currentWidth === 1 ? 'selected' : ''}>細線 (1.0px)</option>
+              <option value="1.5" ${currentWidth === 1.5 ? 'selected' : ''}>標準 (1.5px)</option>
+              <option value="2.5" ${currentWidth === 2.5 ? 'selected' : ''}>加粗 (2.5px)</option>
+            </select>
+          </div>
+
+          <!-- 線條色彩 -->
+          <div class="field-row">
+            <span class="field-label">色彩</span>
+            <select class="field-select" onchange="updateSingleLink('${linkId}', 'color', this.value)">
+              <option value="" ${!currentColor ? 'selected' : ''}>預設色彩</option>
+              <option value="#2563eb" ${currentColor === '#2563eb' ? 'selected' : ''}>🔵 商務藍</option>
+              <option value="#059669" ${currentColor === '#059669' ? 'selected' : ''}>🟢 翡翠綠</option>
+              <option value="#d97706" ${currentColor === '#d97706' ? 'selected' : ''}>🟠 琥珀橙</option>
+              <option value="#ef4444" ${currentColor === '#ef4444' ? 'selected' : ''}>🔴 朱紅色</option>
+              <option value="#64748b" ${currentColor === '#64748b' ? 'selected' : ''}>🔘 冷灰</option>
+            </select>
+          </div>
+
+          <!-- 位置/距離微調滑塊 (滿足用戶拉遠拉近、調高度的要求) -->
+          ${!isMatrix ? `
+            <div class="field-row" style="margin-top: 4px;">
+              <span class="field-label">高低</span>
+              <input type="range" id="link-offset-slider" min="-60" max="60" value="${splitOffset}" 
+                     style="flex: 1;"
+                     oninput="updateLinkOffset('${sId}', this.value)">
+              <span id="link-offset-val" style="width: 42px; text-align: right; font-size: 11px; color: var(--text-muted);">${splitOffset > 0 ? '+' : ''}${splitOffset}px</span>
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); line-height: 1.3; padding-left: 54px;">
+              可直接在畫布上拖動藍色手柄調節折線高低
+            </div>
+          ` : `
+            <div class="field-row" style="margin-top: 4px;">
+              <span class="field-label">偏置</span>
+              <input type="range" id="matrix-offset-slider" min="-150" max="150" value="${matrixOffset}" 
+                     style="flex: 1;"
+                     oninput="updateMatrixOffset('${linkId}', this.value)">
+              <span id="matrix-offset-val" style="width: 42px; text-align: right; font-size: 11px; color: var(--text-muted);">${matrixOffset}px</span>
+            </div>
+            <div style="font-size: 10px; color: var(--text-muted); line-height: 1.3; padding-left: 54px;">
+              可直接在畫布上左右拖動橙色手柄避讓其他卡片
+            </div>
+          `}
+        </div>
+      `;
+
+      drawerFooterActions.innerHTML = `
+        <button class="footer-act-btn" style="grid-column: span 2;" onclick="resetSingleLink('${linkId}')">🔄 還原預設</button>
+        <button class="footer-act-btn" style="grid-column: span 2;" onclick="closeDrawer()">完成關閉</button>
+      `;
+    }
+
+    window.updateLinkOffset = function(sourceId, val) {
+      const proj = getCurrentProject();
+      if (!proj.splitOffsets) proj.splitOffsets = {};
+      proj.splitOffsets[sourceId] = parseInt(val, 10);
+      const numLabel = document.getElementById('link-offset-val');
+      if (numLabel) numLabel.textContent = `${val > 0 ? '+' : ''}${val}px`;
+      render();
+    };
+
+    window.updateMatrixOffset = function(linkId, val) {
+      const proj = getCurrentProject();
+      if (!proj.linkOverrides) proj.linkOverrides = {};
+      if (!proj.linkOverrides[linkId]) proj.linkOverrides[linkId] = {};
+      proj.linkOverrides[linkId].splitOffset = parseInt(val, 10);
+      const numLabel = document.getElementById('matrix-offset-val');
+      if (numLabel) numLabel.textContent = `${val}px`;
+      render();
+    };
+
+    window.updateSingleLink = function(linkId, key, value) {
+      const proj = getCurrentProject();
+      if (!proj.linkOverrides) proj.linkOverrides = {};
+      if (!proj.linkOverrides[linkId]) proj.linkOverrides[linkId] = {};
+      proj.linkOverrides[linkId][key] = value;
+      render();
+    };
+
+    window.resetSingleLink = function(linkId) {
+      const proj = getCurrentProject();
+      if (proj.linkOverrides && proj.linkOverrides[linkId]) {
+        delete proj.linkOverrides[linkId];
+      }
+      render();
+      openLinkDrawer(linkId);
+    };
+
+    // ========================================================
+    // 右側抽屜：極簡緊湊收斂表單 (標籤左置、高密度單屏)
+    // ========================================================
+    function selectNode(id) {
+      selectedNodeId = id;
+      selectedLinkId = null;
+      render();
+
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, id);
+      if (!node) {
+        sideDrawer.classList.add('hidden');
+        return;
+      }
+
+      sideDrawer.classList.remove('hidden');
+      const isRoot = node.id === proj.root.id;
+      const duties = normalizeDuties(node.responsibilities);
+      node.responsibilities = duties;
+      const currentColor = node.colorTheme || 'blue';
+      const currentIntensity = node.colorIntensity || 'normal';
+      const { nodes } = flatten(proj.root);
+
+      const firstLetter = (node.name || '待')[0];
+      const parentCandidates = nodes.filter(n => n.id !== node.id && !isDescendant(node, n.id));
+      const currentParent = findParentNode(proj.root, node.id);
+      const matrixCandidates = nodes.filter(n => n.id !== node.id && !isDescendant(node, n.id));
+
+      drawerHeaderContent.innerHTML = `
+        <div class="drawer-header-left">
+          <div class="avatar-circle">${firstLetter}</div>
+          <div class="drawer-title-group">
+            <span class="drawer-title-text">${escapeHtml(node.name || '姓名待填')}</span>
+            <span class="drawer-subtitle-text">${escapeHtml(node.title || '職位待定')}</span>
+          </div>
+        </div>
+        <button class="icon-btn" onclick="closeDrawer()" style="width: 20px; height: 20px;">✕</button>
+      `;
+
+      drawerFormContent.innerHTML = `
+        <!-- 基本資料 (單行雙欄、標籤嚴格左置) -->
+        <div class="form-compact-section">
+          <div class="field-two-col">
+            <div class="field-col">
+              <span class="field-col-label">姓名</span>
+              <input type="text" class="field-input" id="edit-name" value="${escapeHtml(node.name || '')}" placeholder="成員姓名">
+            </div>
+            <div class="field-col">
+              <span class="field-col-label">職位</span>
+              <input type="text" class="field-input" id="edit-title" value="${escapeHtml(node.title || '')}" placeholder="崗位稱謂">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <span class="field-label">部門</span>
+            <input type="text" class="field-input" id="edit-dept" value="${escapeHtml(node.department || '')}" placeholder="如：架構組、商業化組">
+          </div>
+
+          <!-- 色彩與濃度收攏到一行 -->
+          <div class="field-row">
+            <span class="field-label">色彩</span>
+            <div class="color-swatch-compact-row">
+              ${CARD_PALETTES.map(p => `
+                <div class="color-swatch-item ${p.id === currentColor ? 'active' : ''}" 
+                     style="background-color: ${p.hex};" 
+                     title="${p.name}" 
+                     onclick="setNodeColor('${p.id}')"></div>
+              `).join('')}
+              <div class="intensity-capsule">
+                <button class="intensity-btn ${currentIntensity === 'light' ? 'active' : ''}" onclick="setNodeIntensity('light')">淡</button>
+                <button class="intensity-btn ${currentIntensity === 'normal' ? 'active' : ''}" onclick="setNodeIntensity('normal')">中</button>
+                <button class="intensity-btn ${currentIntensity === 'vivid' ? 'active' : ''}" onclick="setNodeIntensity('vivid')">濃</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 批量套用按鈕緊湊並排 -->
+          <div class="field-row" style="margin-top: 1px;">
+            <span class="field-label">同步</span>
+            <button class="btn-row-action" onclick="applyColorToSubtree('${node.id}')" title="將色彩與濃度同步套用至所有直屬下級">⬇️ 同步下級</button>
+            <button class="btn-row-action" onclick="applyColorToSameDepth('${node.id}')" title="將色彩與濃度同步套用至全架構所有同級崗位">↔️ 同步同級</button>
+          </div>
+        </div>
+
+        <!-- 組織歸屬與編制 (單行左置) -->
+        <div class="form-compact-section">
+          ${!isRoot ? `
+            <div class="field-row">
+              <span class="field-label">主管</span>
+              <select class="field-select" id="edit-parent">
+                ${parentCandidates.map(c => `
+                  <option value="${c.id}" ${currentParent && currentParent.id === c.id ? 'selected' : ''}>
+                    ${escapeHtml(c.name)} - ${escapeHtml(c.title)}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          <div class="field-row">
+            <span class="field-label">虛線</span>
+            <select class="field-select" id="edit-matrix">
+              <option value="">無 (僅直屬實線主管)</option>
+              ${matrixCandidates.map(c => `
+                <option value="${c.id}" ${node.matrixManagerId === c.id ? 'selected' : ''}>
+                  ${escapeHtml(c.name)} - ${escapeHtml(c.title)}
+                </option>
+              `).join('')}
+            </select>
+          </div>
+
+          <div class="field-row">
+            <span class="field-label">編制</span>
+            <select class="field-select" id="edit-status">
+              <option value="active" ${(!node.status || node.status === 'active') ? 'selected' : ''}>✅ 正式在職 (Active)</option>
+              <option value="hiring" ${node.status === 'hiring' ? 'selected' : ''}>🎯 招募空缺中 (HC Open)</option>
+              <option value="contractor" ${node.status === 'contractor' ? 'selected' : ''}>💼 外聘顧問 (Contractor)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- RACI 職責清單 (高密度緊湊清單) -->
+        <div class="form-compact-section">
+          <div class="compact-section-header">
+            <span>職責清單 (${duties.length})</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn-row-action" style="padding: 1px 6px;" onclick="addDutyItem()">+ 新增</button>
+              <button class="btn-row-action" style="padding: 1px 6px;" onclick="openBatchModal()">⚡ 批次</button>
+            </div>
+          </div>
+
+          <div class="duty-manage-list" id="duty-inputs-container">
+            ${duties.map((d, index) => `
+              <div class="duty-manage-item">
+                <button class="raci-toggle-btn raci-pill raci-${d.raci}" onclick="cycleRaci(${index})" title="點選切換 RACI">${d.raci}</button>
+                <input type="text" class="duty-manage-input" data-index="${index}" value="${escapeHtml(d.text)}" placeholder="職責描述事項...">
+                <button class="mini-svg-btn danger" onclick="deleteDutyItem(${index})" title="刪除" style="width: 18px; height: 18px; border: none; background: transparent;">✕</button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      drawerFooterActions.innerHTML = `
+        <button class="footer-act-btn" onclick="addSingleChild('${node.id}')">+ 加下級</button>
+        <button class="footer-act-btn highlight" onclick="addHiringChild('${node.id}')">🎯 招募HC</button>
+        <button class="footer-act-btn" onclick="addTwoLevels('${node.id}')">+ 加兩層</button>
+        ${!isRoot ? `<button class="footer-act-btn danger" onclick="removeNode('${node.id}')">🗑️ 刪除</button>` : ''}
+      `;
+
+      // 事件綁定
+      document.getElementById('edit-name').addEventListener('input', (e) => {
+        node.name = e.target.value;
+        render();
+      });
+      document.getElementById('edit-title').addEventListener('input', (e) => {
+        node.title = e.target.value;
+        render();
+      });
+      document.getElementById('edit-dept').addEventListener('input', (e) => {
+        node.department = e.target.value;
+        render();
+      });
+
+      const editParentSelect = document.getElementById('edit-parent');
+      if (editParentSelect) {
+        editParentSelect.addEventListener('change', (e) => {
+          changeNodeParent(node.id, e.target.value);
+        });
+      }
+
+      document.getElementById('edit-matrix').addEventListener('change', (e) => {
+        node.matrixManagerId = e.target.value || null;
+        render();
+      });
+
+      document.getElementById('edit-status').addEventListener('change', (e) => {
+        node.status = e.target.value;
+        render();
+      });
+
+      document.querySelectorAll('.duty-manage-input').forEach(inp => {
+        inp.addEventListener('input', (e) => {
+          const idx = parseInt(e.target.getAttribute('data-index'), 10);
+          node.responsibilities[idx].text = e.target.value;
+          render();
+        });
+      });
+    }
+
+    window.closeDrawer = function() {
+      sideDrawer.classList.add('hidden');
+      selectedNodeId = null;
+      selectedLinkId = null;
+      render();
+    };
+
+    // 畫布外觀獨立切換 (底色與底紋解耦，即時保存並即時渲染)
+    window.setCanvasBg = function(bgKey, label) {
+      const proj = getCurrentProject();
+      proj.canvasBg = bgKey;
+      saveData();
+      const lbl = document.getElementById('canvas-bg-label');
+      if (lbl) lbl.textContent = label;
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      render();
+      const nameMap = { ivory: '護眼米黃', white: '純淨純白', slate: '現代冷灰', teal: '淡雅青綠', onyx: '深空暗黑' };
+      showToast(`畫布底色已即時套用：${nameMap[bgKey] || label || bgKey}`, '🎨');
+    };
+
+    window.setCanvasPattern = function(patternKey) {
+      const proj = getCurrentProject();
+      proj.canvasPattern = patternKey;
+      saveData();
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      render();
+      const patMap = { dots: '微點陣', grid: '工程網格', none: '純色無紋' };
+      showToast(`畫布底紋已切換：${patMap[patternKey] || patternKey}`, '📐');
+    };
+
+    // 全局一鍵套用卡片風格色系 (與畫布底色解耦，即時保存並即時渲染)
+    window.setGlobalCardPalette = function(paletteKey) {
+      const proj = getCurrentProject();
+      const colorMap = {
+        'classic': { theme: 'blue', name: '經典商務藍系' },
+        'emerald': { theme: 'emerald', name: '翡翠生機綠系' },
+        'warm': { theme: 'amber', name: '活力暖陽橙系' },
+        'purple': { theme: 'purple', name: '科技深邃紫系' },
+        'slate': { theme: 'slate', name: '莫蘭迪典雅灰' }
+      };
+      const target = colorMap[paletteKey] || colorMap['classic'];
+      function applyRec(curr, depth) {
+        curr.colorTheme = target.theme;
+        curr.colorIntensity = depth === 0 ? 'vivid' : (depth === 1 ? 'normal' : 'light');
+        if (curr.children) {
+          curr.children.forEach(c => applyRec(c, depth + 1));
+        }
+      }
+      applyRec(proj.root, 0);
+      proj.cardPaletteTheme = paletteKey;
+      saveData();
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      render();
+      if (selectedNodeId) selectNode(selectedNodeId);
+      showToast(`全圖卡片主題已即時套用：${target.name}`, '✨');
+    };
+
+    // 自主設定色彩與濃度
+    window.setNodeColor = function(colorKey) {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (!node) return;
+      node.colorTheme = colorKey;
+      selectNode(selectedNodeId);
+    };
+
+    window.setNodeIntensity = function(intensity) {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (!node) return;
+      node.colorIntensity = intensity;
+      selectNode(selectedNodeId);
+    };
+
+    window.applyColorToSubtree = function(nodeId) {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, nodeId);
+      if (!node) return;
+      const targetColor = node.colorTheme || 'blue';
+      const targetIntensity = node.colorIntensity || 'normal';
+
+      function applyRec(curr) {
+        curr.colorTheme = targetColor;
+        curr.colorIntensity = targetIntensity;
+        if (curr.children) curr.children.forEach(applyRec);
+      }
+      applyRec(node);
+      selectNode(nodeId);
+    };
+
+    window.applyColorToSameDepth = function(nodeId) {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, nodeId);
+      if (!node) return;
+      const targetColor = node.colorTheme || 'blue';
+      const targetIntensity = node.colorIntensity || 'normal';
+      const targetDepth = node.depth;
+
+      const { nodes } = flatten(proj.root);
+      nodes.forEach(n => {
+        if (n.depth === targetDepth) {
+          n.colorTheme = targetColor;
+          n.colorIntensity = targetIntensity;
+        }
+      });
+      selectNode(nodeId);
+    };
+
+    window.cycleRaci = function(idx) {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (!node || !node.responsibilities || !node.responsibilities[idx]) return;
+
+      const order = ['A', 'R', 'C', 'I'];
+      const cur = node.responsibilities[idx].raci || 'R';
+      const nextIndex = (order.indexOf(cur) + 1) % order.length;
+      node.responsibilities[idx].raci = order[nextIndex];
+
+      selectNode(selectedNodeId);
+    };
+
+    function changeNodeParent(nodeId, newParentId) {
+      const proj = getCurrentProject();
+      const oldParent = findParentNode(proj.root, nodeId);
+      const newParent = findNodeById(proj.root, newParentId);
+      const self = findNodeById(proj.root, nodeId);
+
+      if (!oldParent || !newParent || !self) return;
+
+      oldParent.children = oldParent.children.filter(c => c.id !== nodeId);
+      if (!newParent.children) newParent.children = [];
+      newParent.children.push(self);
+
+      render();
+    }
+
+    window.openBatchModal = function() {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (!node) return;
+      const duties = normalizeDuties(node.responsibilities);
+      document.getElementById('batch-textarea').value = duties.map(d => d.text).join('\n');
+      document.getElementById('batch-duty-modal').style.display = 'flex';
+    };
+
+    window.closeBatchModal = function() {
+      document.getElementById('batch-duty-modal').style.display = 'none';
+    };
+
+    window.confirmBatchDuties = function() {
+      const text = document.getElementById('batch-textarea').value;
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (node) {
+        node.responsibilities = text.split('\n')
+          .map(l => l.trim())
+          .filter(l => l.length > 0)
+          .map((t, i) => ({ text: t, raci: i === 0 ? 'A' : 'R' }));
+        selectNode(selectedNodeId);
+      }
+      closeBatchModal();
+    };
+
+    window.addDutyItem = function() {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (!node) return;
+      if (!node.responsibilities) node.responsibilities = [];
+      node.responsibilities.push({ text: '新工作職責事項', raci: 'R' });
+      selectNode(selectedNodeId);
+    };
+
+    window.deleteDutyItem = function(idx) {
+      const proj = getCurrentProject();
+      const node = findNodeById(proj.root, selectedNodeId);
+      if (!node || !node.responsibilities) return;
+      node.responsibilities.splice(idx, 1);
+      selectNode(selectedNodeId);
+    };
+
+    function createEmptyNode(title = "新崗位", name = "待定", dept = "", status = "active") {
+      return {
+        id: "node-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+        name: name,
+        title: title,
+        department: dept,
+        status: status,
+        colorTheme: "blue",
+        colorIntensity: "normal",
+        matrixManagerId: null,
+        responsibilities: [
+          { text: "落實關鍵業務產出與職能交付", raci: "A" },
+          { text: "團隊內部日常工程協同", raci: "R" }
+        ],
+        children: []
+      };
+    }
+
+    window.addHiringChild = function(parentId) {
+      const proj = getCurrentProject();
+      const parent = findNodeById(proj.root, parentId);
+      if (!parent) return;
+      if (!parent.children) parent.children = [];
+      const newNode = createEmptyNode("待招崗位 (HC)", "待招聘", parent.department || "", "hiring");
+      newNode.colorTheme = "amber";
+      newNode.colorIntensity = "light";
+      parent.children.push(newNode);
+      selectNode(newNode.id);
+    };
+
+    window.addSingleChild = function(parentId) {
+      const proj = getCurrentProject();
+      const parent = findNodeById(proj.root, parentId);
+      if (!parent) return;
+      if (!parent.children) parent.children = [];
+      const newNode = createEmptyNode("新職位", "新員工", parent.department || "");
+      newNode.colorTheme = parent.colorTheme || "blue";
+      newNode.colorIntensity = parent.colorIntensity || "normal";
+      parent.children.push(newNode);
+      selectNode(newNode.id);
+    };
+
+    window.addTwoLevels = function(parentId) {
+      const proj = getCurrentProject();
+      const parent = findNodeById(proj.root, parentId);
+      if (!parent) return;
+      if (!parent.children) parent.children = [];
+
+      const level1 = createEmptyNode("組長", "組長待定", parent.department || "");
+      const level2 = createEmptyNode("專員", "組員待定", parent.department || "");
+      level1.colorTheme = parent.colorTheme || "blue";
+      level2.colorTheme = parent.colorTheme || "blue";
+      level1.children.push(level2);
+
+      parent.children.push(level1);
+      selectNode(level1.id);
+    };
+
+    window.addSibling = function(nodeId) {
+      const proj = getCurrentProject();
+      if (nodeId === proj.root.id) return;
+      const parent = findParentNode(proj.root, nodeId);
+      if (!parent) return;
+      const self = findNodeById(proj.root, nodeId);
+      const newNode = createEmptyNode("同級職位", "新同事", self.department || "");
+      newNode.colorTheme = self.colorTheme || "blue";
+      newNode.colorIntensity = self.colorIntensity || "normal";
+      parent.children.push(newNode);
+      selectNode(newNode.id);
+    };
+
+    window.removeNode = function(nodeId) {
+      const proj = getCurrentProject();
+      if (nodeId === proj.root.id) {
+        alert("無法刪除根節點負責人！");
+        return;
+      }
+      const parent = findParentNode(proj.root, nodeId);
+      if (!parent) return;
+
+      const node = findNodeById(proj.root, nodeId);
+      const hasChildren = node.children && node.children.length > 0;
+
+      let confirmMsg = `確認要刪除「${node.name || '此成員'}」嗎？`;
+      if (hasChildren) {
+        confirmMsg += `\n（提示：該成員下方的 ${node.children.length} 位下屬將會一併移除）`;
+      }
+
+      if (!confirm(confirmMsg)) return;
+
+      parent.children = parent.children.filter(c => c.id !== nodeId);
+
+      if (selectedNodeId === nodeId) {
+        selectedNodeId = null;
+        sideDrawer.classList.add('hidden');
+      }
+      render();
+    };
+
+    // 自由便簽管理
+    window.addNewNote = function() {
+      const proj = getCurrentProject();
+      if (!proj.notes) proj.notes = [];
+
+      const centerOffsetX = -panX + (canvasContainer.clientWidth / 2 - 110) / zoom;
+      const centerOffsetY = -panY + 80 / zoom;
+
+      const newNote = {
+        id: "note-" + Date.now(),
+        text: "在此輸入文字備註說明...",
+        x: Math.round(centerOffsetX),
+        y: Math.round(centerOffsetY)
+      };
+
+      proj.notes.push(newNote);
+      render();
+    };
+
+    window.updateNoteText = function(noteId, text) {
+      const proj = getCurrentProject();
+      const note = (proj.notes || []).find(n => n.id === noteId);
+      if (note) {
+        note.text = text;
+        saveData();
+      }
+    };
+
+    window.deleteNote = function(noteId) {
+      const proj = getCurrentProject();
+      if (!proj.notes) return;
+      proj.notes = proj.notes.filter(n => n.id !== noteId);
+      render();
+    };
+
+    // 連線樣式自選 (即時保存與反饋)
+    window.setLinkStyle = function(style, label) {
+      const proj = getCurrentProject();
+      proj.linkStyle = style;
+      saveData();
+      const lbl = document.getElementById('link-style-label');
+      if (lbl) lbl.textContent = label;
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      render();
+      showToast(`全域連線線型已套用：${label || style}`, '📐');
+    };
+
+    window.setLineWidth = function(width) {
+      const proj = getCurrentProject();
+      proj.lineWidth = width;
+      saveData();
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      render();
+      showToast(`全域連線粗細已套用：${width}px`, '📏');
+    };
+
+    // 實體 Tab 導航
+    function renderProjectTabs() {
+      let tabsHtml = '';
+      appProjects.forEach(p => {
+        const isActive = p.id === activeProjectId;
+        const dotColor = isActive ? '#93c5fd' : '#3b82f6';
+        tabsHtml += `
+          <div class="nav-tab-item ${isActive ? 'active' : ''}" onclick="switchProject('${p.id}')">
+            <span class="nav-tab-dot" style="background-color: ${dotColor};"></span>
+            <span>${escapeHtml(p.name)}</span>
+            ${appProjects.length > 1 ? `<span class="nav-tab-close" onclick="event.stopPropagation(); closeProject('${p.id}')" title="刪除架構">✕</span>` : ''}
+          </div>
+        `;
+      });
+      tabsHtml += `<button class="btn-create-tab" id="btn-add-project" onclick="addNewProject()" title="新增中心或部門架構">＋ 新增架構</button>`;
+      projectTabsNav.innerHTML = tabsHtml;
+    }
+
+    window.switchProject = function(pId) {
+      activeProjectId = pId;
+      selectedNodeId = null;
+      selectedLinkId = null;
+      sideDrawer.classList.add('hidden');
+      render();
+    };
+
+    window.addNewProject = function() {
+      const name = prompt("請輸入新公司或新部門的名稱：", "新業務部門");
+      if (!name || !name.trim()) return;
+
+      const newId = "proj-" + Date.now();
+      const newProj = {
+        id: newId,
+        name: name.trim(),
+        canvasBg: "slate",
+        canvasPattern: "dots",
+        orientation: "vertical",
+        linkStyle: "orthogonal",
+        lineWidth: 1.5,
+        linkOverrides: {},
+        splitOffsets: {},
+        notes: [],
+        root: {
+          id: "node-" + Date.now(),
+          name: "負責人待定",
+          title: "部門主管",
+          department: name.trim(),
+          status: "active",
+          colorTheme: "blue",
+          colorIntensity: "normal",
+          matrixManagerId: null,
+          responsibilities: [{ text: "負責新架構戰略推進與團隊搭建", raci: "A" }],
+          children: []
+        }
+      };
+      appProjects.push(newProj);
+      activeProjectId = newId;
+      render();
+    };
+
+    window.closeProject = function(pId) {
+      if (appProjects.length <= 1) return;
+      const proj = appProjects.find(p => p.id === pId);
+      if (!confirm(`確認要刪除「${proj?.name}」整套架構嗎？此操作不可逆。`)) return;
+
+      appProjects = appProjects.filter(p => p.id !== pId);
+      if (activeProjectId === pId) {
+        activeProjectId = appProjects[0].id;
+      }
+      render();
+    };
+
+    window.setOrientation = function(orient) {
+      const proj = getCurrentProject();
+      proj.orientation = orient;
+      render();
+    };
+
+    window.setDutyView = function(show) {
+      showResponsibilities = show;
+      render();
+    };
+
+    window.toggleDropdown = function(id) {
+      const menu = document.getElementById(id);
+      const isShow = menu.classList.contains('show');
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      if (!isShow) menu.classList.add('show');
+    };
+
+    window.addEventListener('click', (e) => {
+      if (!e.target.closest('.dropdown-menu') && !e.target.closest('.tool-btn')) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      }
+    });
+
+    function findNodeById(root, id) {
+      if (root.id === id) return root;
+      if (root.children) {
+        for (let child of root.children) {
+          const res = findNodeById(child, id);
+          if (res) return res;
+        }
+      }
+      return null;
+    }
+
+    function findParentNode(root, childId) {
+      if (root.children) {
+        for (let child of root.children) {
+          if (child.id === childId) return root;
+          const res = findParentNode(child, childId);
+          if (res) return res;
+        }
+      }
+      return null;
+    }
+
+    function isDescendant(parent, targetId) {
+      if (!parent || !parent.children) return false;
+      for (let child of parent.children) {
+        if (child.id === targetId) return true;
+        if (isDescendant(child, targetId)) return true;
+      }
+      return false;
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function updateTransform() {
+      viewportGroup.setAttribute('transform', `translate(${panX}, ${panY}) scale(${zoom})`);
+    }
+
+    canvasContainer.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.node-card') || 
+          e.target.closest('.free-note-box') || 
+          e.target.closest('.link-group') || 
+          e.target.closest('.link-split-handle') || 
+          e.target.closest('.link-matrix-handle') || 
+          e.target.closest('.viewport-controls') || 
+          e.target.closest('.floating-toolbar') || 
+          e.target.closest('#side-drawer') ||
+          e.target.closest('.dropdown-menu')) return;
+      isPanning = true;
+      canvasContainer.classList.add('panning');
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+
+      // 點空白處關閉下拉選單與取消選中
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+      if (selectedLinkId || selectedNodeId) {
+        selectedLinkId = null;
+        selectedNodeId = null;
+        sideDrawer.classList.add('hidden');
+        render();
+      }
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isPanning) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isPanning) {
+        isPanning = false;
+        canvasContainer.classList.remove('panning');
+      }
+    });
+
+    canvasContainer.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const factor = 1.08;
+      if (e.deltaY < 0) {
+        zoom = Math.min(2.5, zoom * factor);
+      } else {
+        zoom = Math.max(0.3, zoom / factor);
+      }
+      updateTransform();
+    }, { passive: false });
+
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      zoom = Math.min(2.5, zoom * 1.2);
+      updateTransform();
+    });
+
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      zoom = Math.max(0.3, zoom / 1.2);
+      updateTransform();
+    });
+
+    document.getElementById('btn-zoom-reset').addEventListener('click', () => {
+      zoom = 1;
+      panX = 60;
+      panY = 70;
+      updateTransform();
+    });
+
+    function saveData() {
+      try {
+        localStorage.setItem('org_chart_projects', JSON.stringify(appProjects));
+      } catch (err) {
+        console.error('儲存失敗:', err);
+      }
+    }
+    window.saveData = saveData;
+    window.saveProjects = saveData;
+
+    function showToast(msg, icon = '✓') {
+      const toast = document.getElementById('system-toast');
+      if (!toast) return;
+      toast.innerHTML = `<span style="color: #60a5fa; font-weight: 800;">${icon}</span> <span>${msg}</span>`;
+      toast.classList.add('show');
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 1800);
+    }
+    window.showToast = showToast;
+
+    window.exportJson = function() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appProjects, null, 2));
+      const a = document.createElement('a');
+      a.href = dataStr;
+      a.download = `組織架構全量備份_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+
+    document.getElementById('file-import').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const parsed = JSON.parse(event.target.result);
+          if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].root) {
+            appProjects = parsed;
+            activeProjectId = appProjects[0].id;
+            selectedNodeId = null;
+            selectedLinkId = null;
+            sideDrawer.classList.add('hidden');
+            render();
+            alert("組織架構資料還原成功！");
+          } else {
+            alert("檔案格式不正確，需包含有效的組織架構樹。");
+          }
+        } catch (err) {
+          alert("讀取檔案失敗，請確保為合法 JSON 格式。");
+        }
+      };
+      reader.readAsText(file);
+      e.target.value = '';
+    });
+
+    window.resetDemo = function() {
+      if (confirm("確認重置回預設示範架構嗎？目前的修改將被覆蓋。")) {
+        appProjects = JSON.parse(JSON.stringify(initialProjects));
+        activeProjectId = appProjects[0].id;
+        selectedNodeId = null;
+        selectedLinkId = null;
+        sideDrawer.classList.add('hidden');
+        render();
+      }
+    };
+
+    window.exportSvgFile = function() {
+      const proj = getCurrentProject();
+      const { nodes } = flatten(proj.root);
+      if (nodes.length === 0) return;
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      const cardH = getCardH();
+
+      nodes.forEach(n => {
+        if (n.x < minX) minX = n.x;
+        if (n.x + CARD_W > maxX) maxX = n.x + CARD_W;
+        if (n.y < minY) minY = n.y;
+        if (n.y + cardH > maxY) maxY = n.y + cardH;
+      });
+
+      (proj.notes || []).forEach(note => {
+        if (note.x < minX) minX = note.x;
+        if (note.x + 220 > maxX) maxX = note.x + 220;
+        if (note.y < minY) minY = note.y;
+        if (note.y + 80 > maxY) maxY = note.y + 80;
+      });
+
+      const padding = 50;
+      const exportW = (maxX - minX) + padding * 2;
+      const exportH = (maxY - minY) + padding * 2;
+
+      const svgClone = svg.cloneNode(true);
+      const cloneViewport = svgClone.querySelector('#viewport-group');
+      cloneViewport.setAttribute('transform', `translate(${-minX + padding}, ${-minY + padding}) scale(1)`);
+      svgClone.setAttribute('width', exportW);
+      svgClone.setAttribute('height', exportH);
+      svgClone.setAttribute('viewBox', `0 0 ${exportW} ${exportH}`);
+      svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+
+      const styleElement = document.createElement('style');
+      styleElement.textContent = document.querySelector('style').textContent;
+      svgClone.prepend(styleElement);
+
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgClone);
+
+      const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const a = document.createElement('a');
+      a.download = `${proj.name}_組織架構圖_${new Date().toISOString().slice(0, 10)}.svg`;
+      a.href = URL.createObjectURL(blob);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    };
+
+    window.exportImage = function() {
+      const proj = getCurrentProject();
+      const { nodes } = flatten(proj.root);
+      if (nodes.length === 0) return;
+
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      const cardH = getCardH();
+
+      nodes.forEach(n => {
+        if (n.x < minX) minX = n.x;
+        if (n.x + CARD_W > maxX) maxX = n.x + CARD_W;
+        if (n.y < minY) minY = n.y;
+        if (n.y + cardH > maxY) maxY = n.y + cardH;
+      });
+
+      (proj.notes || []).forEach(note => {
+        if (note.x < minX) minX = note.x;
+        if (note.x + 220 > maxX) maxX = note.x + 220;
+        if (note.y < minY) minY = note.y;
+        if (note.y + 80 > maxY) maxY = note.y + 80;
+      });
+
+      const padding = 50;
+      const exportW = (maxX - minX) + padding * 2;
+      const exportH = (maxY - minY) + padding * 2;
+
+      const svgClone = svg.cloneNode(true);
+      const cloneViewport = svgClone.querySelector('#viewport-group');
+      cloneViewport.setAttribute('transform', `translate(${-minX + padding}, ${-minY + padding}) scale(1)`);
+      svgClone.setAttribute('width', exportW);
+      svgClone.setAttribute('height', exportH);
+
+      const styleElement = document.createElement('style');
+      styleElement.textContent = document.querySelector('style').textContent;
+      svgClone.prepend(styleElement);
+
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgClone);
+
+      const canvas = document.createElement('canvas');
+      const dpr = 2;
+      canvas.width = exportW * dpr;
+      canvas.height = exportH * dpr;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      // 對應底色
+      const bgMap = {
+        'ivory': '#faf6ee',
+        'white': '#ffffff',
+        'slate': '#f1f5f9',
+        'teal': '#f0fdf4',
+        'onyx': '#0b1120'
+      };
+      ctx.fillStyle = bgMap[proj.canvasBg] || '#f1f5f9';
+      ctx.fillRect(0, 0, exportW, exportH);
+
+      const img = new Image();
+      const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+      const URL = window.URL || window.webkitURL || window;
+      const blobURL = URL.createObjectURL(svgBlob);
+
+      img.onload = () => {
+        try {
+          ctx.drawImage(img, 0, 0);
+          URL.revokeObjectURL(blobURL);
+
+          const a = document.createElement('a');
+          a.download = `${proj.name}_組織架構圖_${new Date().toISOString().slice(0, 10)}.png`;
+          a.href = canvas.toDataURL('image/png');
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        } catch (e) {
+          exportSvgFile();
+        }
+      };
+      img.onerror = () => {
+        exportSvgFile();
+      };
+      img.src = blobURL;
+    };
+
+    render();
+  </script>
+<div id="system-toast" class="system-toast"></div>
+</body>
+</html>
